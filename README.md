@@ -7,9 +7,9 @@ Funciona sem servidor, sem base de dados e sem login. É só HTML, CSS e
 JavaScript — as fotografias são comprimidas no próprio telemóvel e entregues
 à app de email através da partilha nativa do sistema.
 
-**Projeto autónomo.** Não faz parte do CATEhub, não partilha código, base de
-dados nem configuração com ele, e não precisa dele para nada. É uma pasta de
-seis ficheiros que se publica e se usa por si.
+**Projeto autónomo.** Não depende de nenhum outro sistema, não partilha código,
+base de dados nem configuração com nada. É uma pasta de ficheiros que se publica
+e se usa por si.
 
 ---
 
