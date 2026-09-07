@@ -1,6 +1,6 @@
 {
-  "name": "CATE · Registo Fotográfico",
-  "short_name": "Registo CATE",
+  "name": "CATE · Registo de Recolhas",
+  "short_name": "Recolhas CATE",
   "description": "Registo fotográfico de equipamentos na recolha e na entrada em oficina.",
   "lang": "pt-PT",
   "start_url": "./index.html",

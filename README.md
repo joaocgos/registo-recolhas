@@ -1,4 +1,4 @@
-# CATE · Registo Fotográfico
+# CATE · Registo de Recolhas
 
 Página para os técnicos dos serviços de rua enviarem fotografias dos
 equipamentos na **recolha em casa do cliente** e na **entrada em oficina**.
