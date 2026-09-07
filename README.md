@@ -31,14 +31,22 @@ Os quatro ficheiros têm de ficar na **mesma pasta**.
 A página precisa de estar em **HTTPS** — a partilha de ficheiros não funciona
 em `http://` nem a abrir o ficheiro diretamente do telemóvel.
 
-**Netlify Drop** (mais rápido, sem conta obrigatória):
+**GitHub Pages** (o que está em uso):
 
-1. Abrir <https://app.netlify.com/drop>
-2. Arrastar a pasta `app_recolhas` inteira para a página
-3. Sai um endereço do género `https://algo-aleatorio.netlify.app`
+1. Criar o repositório `registo-recolhas` em <https://github.com/new>,
+   **público** (o Pages só é gratuito em repositórios públicos).
+2. `git push -u origin main`
+3. No repositório: *Settings* → *Pages* → *Source: Deploy from a branch* →
+   ramo `main`, pasta `/ (root)` → *Save*.
+4. Ao fim de um minuto fica em <https://joaocgos.github.io/registo-recolhas/>.
 
-**GitHub Pages** (se preferires manter tudo versionado): publicar a pasta num
-repositório e ligar o Pages nas definições.
+Cada `git push` para `main` republica o site automaticamente.
+
+O ficheiro `.nojekyll` existe para o GitHub servir os ficheiros tal como estão,
+sem os passar pelo Jekyll.
+
+**Netlify Drop** é a alternativa sem repositório público: abrir
+<https://app.netlify.com/drop> e arrastar a pasta para a página.
 
 ---
 
