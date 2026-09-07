@@ -712,9 +712,24 @@ async function comprimir(ficheiro) {
 /* ═══════════════════════════════════════════════════════════════════════════
    Adicionar e remover fotografias
    ═══════════════════════════════════════════════════════════════════════════ */
+function pareceImagem(f) {
+  if (!f) return false;
+  if (f.type) return f.type.startsWith("image/");
+  // Algumas câmaras Android devolvem o ficheiro sem MIME. Nesse caso decide-se
+  // pela extensão, e se falhar a descodificação avisa-se mais abaixo.
+  return /\.(jpe?g|png|heic|heif|webp|gif|bmp)$/i.test(f.name || "");
+}
+
 async function adicionar(ficheiros, alvo) {
-  const lista = Array.from(ficheiros || []).filter((f) => f && f.type.startsWith("image/"));
-  if (!lista.length) return;
+  const todos = Array.from(ficheiros || []);
+  const lista = todos.filter(pareceImagem);
+
+  if (!lista.length) {
+    // Nunca desistir sem dizer nada: se chegaram ficheiros e nenhum passou,
+    // o técnico tem de perceber que aconteceu alguma coisa.
+    if (todos.length) aviso("Não foi possível ler a fotografia. Tenta pela galeria.");
+    return;
+  }
 
   if (alvo === "fotos") {
     const espaco = CONFIG.MAX_FOTOS - estado.fotos.length;
@@ -1191,7 +1206,9 @@ document.querySelectorAll(".seg").forEach((botao) => {
 const ligarEntrada = (botaoId, entradaId, alvo) => {
   $(botaoId).addEventListener("click", () => $(entradaId).click());
   $(entradaId).addEventListener("change", (e) => {
-    const ficheiros = e.target.files;
+    // `e.target.files` é uma lista VIVA: limpar o value esvazia-a. Copiar
+    // para um array primeiro, senão adicionar() recebe zero ficheiros.
+    const ficheiros = Array.from(e.target.files || []);
     e.target.value = "";           // permite repetir o mesmo ficheiro
     adicionar(ficheiros, alvo);
     marcar(null, "fot-err", false);
