@@ -1,0 +1,1189 @@
+<!doctype html>
+<html lang="pt-PT">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CATE · Registo Fotográfico</title>
+<meta name="description" content="Registo fotográfico de equipamentos na recolha e na entrada em oficina.">
+<meta name="theme-color" content="#E30A17">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Registo CATE">
+
+<style>
+  :root {
+    --red:        #E30A17;
+    --red-dark:   #C51605;
+    --red-soft:   rgba(227, 10, 23, 0.08);
+    --ink:        #1A1A1A;
+    --ink-2:      #3A3A3A;
+    --muted:      #767676;
+    --line:       #E6E6E6;
+    --bg:         #F7F7F8;
+    --card:       #FFFFFF;
+    --ok:         #14804A;
+    --shadow:     0 1px 2px rgba(0,0,0,.04), 0 8px 24px rgba(0,0,0,.05);
+    --r-lg:       18px;
+    --r-md:       12px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --red-soft: rgba(227, 10, 23, 0.16);
+      --ink:      #F2F2F2;
+      --ink-2:    #D8D8D8;
+      --muted:    #969696;
+      --line:     #2E2E30;
+      --bg:       #121213;
+      --card:     #1C1C1E;
+      --ok:       #3DD68C;
+      --shadow:   0 1px 2px rgba(0,0,0,.3), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  [hidden] { display: none !important; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+                 "Helvetica Neue", Arial, sans-serif;
+    font-size: 16px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  .wrap { max-width: 560px; margin: 0 auto; }
+
+  /* ── Cabeçalho ────────────────────────────────────────────────────────── */
+  header {
+    position: sticky; top: 0; z-index: 20;
+    background: var(--card);
+    border-bottom: 1px solid var(--line);
+    padding: env(safe-area-inset-top) 0 0;
+  }
+  .header-in {
+    display: flex; align-items: center; gap: 14px;
+    padding: 14px 20px;
+  }
+  .header-in img { height: 26px; width: auto; display: block; }
+  .marca { font-size: 21px; font-weight: 800; letter-spacing: .04em; color: var(--red); }
+  .header-sep { width: 1px; height: 22px; background: var(--line); }
+  .header-in h1 {
+    margin: 0; font-size: 14px; font-weight: 600;
+    letter-spacing: .01em; color: var(--ink-2);
+  }
+
+  main { padding: 20px 20px 0; }
+
+  /* ── Cartões ──────────────────────────────────────────────────────────── */
+  .card {
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: var(--r-lg);
+    padding: 20px;
+    margin-bottom: 14px;
+    box-shadow: var(--shadow);
+  }
+  .card-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 4px;
+  }
+  .card h2 {
+    margin: 0; font-size: 12px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: .07em; color: var(--muted);
+  }
+  .card-hint {
+    margin: 0 0 16px; font-size: 13px; color: var(--muted);
+  }
+  .counter {
+    font-size: 12px; font-weight: 600; color: var(--muted);
+    font-variant-numeric: tabular-nums; white-space: nowrap;
+  }
+  .counter.full { color: var(--red); }
+
+  /* ── Campos ───────────────────────────────────────────────────────────── */
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  label.lbl {
+    display: block; font-size: 13px; font-weight: 600;
+    color: var(--ink-2); margin-bottom: 7px;
+  }
+  input[type="text"], textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-md);
+    color: var(--ink);
+    font: inherit;
+    padding: 14px 15px;
+    transition: border-color .15s, background .15s;
+  }
+  input[type="text"] { height: 54px; }
+  textarea { min-height: 88px; resize: vertical; line-height: 1.5; }
+  input::placeholder, textarea::placeholder { color: var(--muted); opacity: .75; }
+  input:focus, textarea:focus {
+    outline: none;
+    border-color: var(--red);
+    background: var(--card);
+  }
+  #num {
+    font-size: 22px; font-weight: 700;
+    letter-spacing: .16em; font-variant-numeric: tabular-nums;
+    transition: font-size .12s, letter-spacing .12s;
+  }
+  /* Números longos encolhem para caberem todos à vista — assim uma gralha
+     no fim do número não fica escondida fora do campo. */
+  #num.longo  { font-size: 18px; letter-spacing: .06em; }
+  #num.enorme { font-size: 15px; letter-spacing: .02em; }
+  .invalid { border-color: var(--red) !important; }
+  .err {
+    display: none; margin: 7px 0 0;
+    font-size: 12.5px; font-weight: 600; color: var(--red);
+  }
+  .err.show { display: block; }
+
+  /* ── Seletor de momento ───────────────────────────────────────────────── */
+  .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .seg {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
+    min-height: 92px; padding: 14px;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-md);
+    color: var(--ink-2);
+    font: inherit; font-size: 13.5px; font-weight: 600; text-align: left;
+    cursor: pointer;
+    transition: border-color .15s, background .15s, color .15s;
+  }
+  .seg svg { width: 22px; height: 22px; stroke: var(--muted); transition: stroke .15s; }
+  .seg-t { display: block; font-size: 15px; font-weight: 700; }
+  .seg-s { display: block; margin-top: 1px; font-size: 12.5px; font-weight: 500;
+           color: var(--muted); transition: color .15s; }
+  .seg[aria-pressed="true"] .seg-s { color: var(--red); opacity: .8; }
+  .seg[aria-pressed="true"] {
+    border-color: var(--red);
+    background: var(--red-soft);
+    color: var(--red);
+  }
+  .seg[aria-pressed="true"] svg { stroke: var(--red); }
+
+  /* ── Nota informativa ─────────────────────────────────────────────────── */
+  .nota {
+    display: flex; align-items: flex-start; gap: 9px;
+    margin: -6px 0 16px; padding: 12px 13px;
+    background: var(--red-soft);
+    border-radius: var(--r-md);
+    font-size: 13px; line-height: 1.4; color: var(--ink-2);
+  }
+  .nota svg { width: 17px; height: 17px; stroke: var(--red); flex: none; margin-top: 1px; }
+
+  /* ── Botões de captura ────────────────────────────────────────────────── */
+  .pickers { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .pick {
+    display: flex; align-items: center; justify-content: center; gap: 9px;
+    height: 54px; padding: 0 14px;
+    background: var(--card);
+    border: 1.5px dashed var(--line);
+    border-radius: var(--r-md);
+    color: var(--ink-2);
+    font: inherit; font-size: 14.5px; font-weight: 600;
+    cursor: pointer;
+    transition: border-color .15s, color .15s, background .15s;
+  }
+  .pick svg { width: 20px; height: 20px; stroke: currentColor; flex: none; }
+  .pick:active { background: var(--red-soft); border-color: var(--red); color: var(--red); }
+  .pick:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* ── Miniaturas ───────────────────────────────────────────────────────── */
+  .thumbs { display: grid; gap: 10px; margin-top: 14px; }
+  .thumbs.grid { grid-template-columns: repeat(3, 1fr); }
+  .thumbs.single { grid-template-columns: 1fr; }
+  .thumbs:empty { display: none; }
+
+  .thumb {
+    position: relative;
+    border-radius: var(--r-md);
+    overflow: hidden;
+    background: var(--bg);
+    border: 1px solid var(--line);
+  }
+  .thumbs.grid .thumb { aspect-ratio: 1 / 1; }
+  .thumbs.single .thumb { aspect-ratio: 16 / 10; }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+
+  .thumb .size {
+    position: absolute; left: 6px; bottom: 6px;
+    padding: 3px 7px; border-radius: 6px;
+    background: rgba(0,0,0,.62); color: #fff;
+    font-size: 10.5px; font-weight: 700; letter-spacing: .02em;
+    font-variant-numeric: tabular-nums;
+  }
+  .thumb .del {
+    position: absolute; top: 6px; right: 6px;
+    width: 30px; height: 30px; padding: 0;
+    display: flex; align-items: center; justify-content: center;
+    border: none; border-radius: 50%;
+    background: rgba(0,0,0,.62); cursor: pointer;
+  }
+  .thumb .del svg { width: 15px; height: 15px; stroke: #fff; }
+
+  .thumb.loading { display: flex; align-items: center; justify-content: center; }
+  .spinner {
+    width: 22px; height: 22px; border-radius: 50%;
+    border: 2.5px solid var(--line); border-top-color: var(--red);
+    animation: spin .7s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Rodapé fixo ──────────────────────────────────────────────────────── */
+  footer {
+    position: sticky; bottom: 0; z-index: 20;
+    background: var(--card);
+    border-top: 1px solid var(--line);
+    padding: 14px 20px calc(14px + env(safe-area-inset-bottom));
+    margin-top: 6px;
+  }
+  .totals {
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 12.5px; color: var(--muted); margin-bottom: 11px;
+  }
+  .totals strong { color: var(--ink-2); font-variant-numeric: tabular-nums; }
+  .send {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%; height: 56px; padding: 0;
+    background: var(--red); color: #fff;
+    border: none; border-radius: 14px;
+    font: inherit; font-size: 16.5px; font-weight: 700;
+    cursor: pointer;
+    transition: background .15s, opacity .15s;
+  }
+  .send svg { width: 20px; height: 20px; stroke: #fff; }
+  .send:active { background: var(--red-dark); }
+  .send:disabled { background: var(--muted); opacity: .5; cursor: not-allowed; }
+  .dest {
+    margin: 10px 0 0; text-align: center;
+    font-size: 12px; color: var(--muted);
+  }
+  .dest b { color: var(--ink-2); font-weight: 600; }
+
+  /* ── Aviso flutuante ──────────────────────────────────────────────────── */
+  #toast {
+    position: fixed; left: 50%; bottom: calc(96px + env(safe-area-inset-bottom));
+    transform: translate(-50%, 14px);
+    z-index: 60; max-width: calc(100% - 40px);
+    padding: 13px 18px; border-radius: 11px;
+    background: var(--ink); color: var(--bg);
+    font-size: 14px; font-weight: 600; text-align: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s, transform .2s;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  /* ── Ecrã de sucesso ──────────────────────────────────────────────────── */
+  #done {
+    position: fixed; inset: 0; z-index: 80;
+    display: none; flex-direction: column;
+    align-items: center; justify-content: center; gap: 6px;
+    padding: 40px; text-align: center;
+    background: var(--bg);
+  }
+  #done.show { display: flex; }
+  .done-mark {
+    width: 76px; height: 76px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: var(--red); margin-bottom: 18px;
+  }
+  .done-mark svg { width: 36px; height: 36px; stroke: #fff; }
+  #done h2 { margin: 0; font-size: 23px; font-weight: 700; }
+  #done p { margin: 8px 0 0; font-size: 14.5px; color: var(--muted); max-width: 330px; }
+  .done-acoes {
+    display: flex; flex-direction: column; gap: 10px;
+    width: 100%; max-width: 300px; margin-top: 30px;
+  }
+  #done .again {
+    width: 100%; height: 54px; padding: 0 24px;
+    background: var(--card); color: var(--ink);
+    border: 1.5px solid var(--line); border-radius: 14px;
+    font: inherit; font-size: 16px; font-weight: 700; cursor: pointer;
+  }
+  #done .again.primaria {
+    background: var(--red); border-color: var(--red); color: #fff;
+  }
+  .done-rodape {
+    margin-top: 18px !important;
+    font-size: 12.5px !important; color: var(--muted);
+  }
+
+  .visually-hidden {
+    position: absolute; width: 1px; height: 1px;
+    overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
+  }
+  :focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <header>
+    <div class="header-in">
+      <img src="logo.png" alt="CATE"
+           onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+      <span class="marca" hidden>CATE</span>
+      <div class="header-sep"></div>
+      <h1>Registo Fotográfico</h1>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Serviço ------------------------------------------------------------->
+    <section class="card">
+      <div class="card-head"><h2>Serviço</h2></div>
+      <p class="card-hint">Apenas dígitos, sem espaços.</p>
+
+      <div class="field">
+        <label class="lbl" for="num">Número do serviço</label>
+        <input id="num" type="text" inputmode="numeric" autocomplete="off"
+               placeholder="26000000" aria-describedby="num-err">
+        <p class="err" id="num-err">Indica o número do serviço.</p>
+      </div>
+
+      <div class="field">
+        <label class="lbl" for="tec">Técnico</label>
+        <input id="tec" type="text" autocomplete="name" placeholder="O teu nome"
+               aria-describedby="tec-err">
+        <p class="err" id="tec-err">Indica o teu nome.</p>
+      </div>
+    </section>
+
+    <!-- Momento ------------------------------------------------------------->
+    <section class="card">
+      <div class="card-head"><h2>Momento</h2></div>
+      <p class="card-hint">Onde estás a tirar as fotografias.</p>
+
+      <div class="segmented" role="group" aria-label="Momento do registo">
+        <button type="button" class="seg" id="seg-recolha"
+                data-momento="recolha" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>
+            <path d="M9.5 21v-6h5v6"/>
+          </svg>
+          <span>
+            <span class="seg-t">Recolha</span>
+            <span class="seg-s">em casa do cliente</span>
+          </span>
+        </button>
+        <button type="button" class="seg" id="seg-oficina"
+                data-momento="oficina" aria-pressed="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M14.7 6.3a4 4 0 0 0 5.2 5.2L21 12l-8.5 8.5a2.1 2.1 0 0 1-3-3L18 9"/>
+            <path d="M3 7h6"/><path d="M3 12h4"/><path d="M3 17h4"/>
+          </svg>
+          <span>
+            <span class="seg-t">Oficina</span>
+            <span class="seg-s">entrada do equipamento</span>
+          </span>
+        </button>
+      </div>
+      <p class="err" id="mom-err">Escolhe o momento do registo.</p>
+    </section>
+
+    <!-- Etiqueta ------------------------------------------------------------>
+    <section class="card">
+      <div class="card-head">
+        <h2 id="etq-titulo">Etiqueta do equipamento</h2>
+        <span class="counter" id="cnt-etq">0 / 1</span>
+      </div>
+      <p class="card-hint" id="etq-hint">A chapa com a marca, o modelo e o número de série.</p>
+
+      <div class="nota" id="etq-nota" hidden>
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
+             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>
+        </svg>
+        <span id="etq-nota-txt"></span>
+      </div>
+
+      <div class="pickers">
+        <button type="button" class="pick" id="etq-cam">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h3.5L8 5.5h8L17.5 8H21v11H3z"/><circle cx="12" cy="13" r="3.6"/>
+          </svg>
+          Câmara
+        </button>
+        <button type="button" class="pick" id="etq-gal">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4.5" width="18" height="15" rx="2.2"/>
+            <circle cx="8.5" cy="10" r="1.6"/><path d="m3.5 17 5-4.5 4 3.5 3-2.5 5 4"/>
+          </svg>
+          Galeria
+        </button>
+      </div>
+      <div class="thumbs single" id="etq-thumbs"></div>
+    </section>
+
+    <!-- Fotos do equipamento ------------------------------------------------>
+    <section class="card">
+      <div class="card-head">
+        <h2>Fotos do equipamento</h2>
+        <span class="counter" id="cnt-fotos">0 / 12</span>
+      </div>
+      <p class="card-hint" id="fotos-hint">
+        O estado do equipamento e qualquer dano visível. Com a câmara,
+        toca outra vez para a fotografia seguinte.
+      </p>
+
+      <div class="pickers">
+        <button type="button" class="pick" id="fot-cam">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M3 8h3.5L8 5.5h8L17.5 8H21v11H3z"/><circle cx="12" cy="13" r="3.6"/>
+          </svg>
+          Câmara
+        </button>
+        <button type="button" class="pick" id="fot-gal">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
+               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <rect x="3" y="4.5" width="18" height="15" rx="2.2"/>
+            <circle cx="8.5" cy="10" r="1.6"/><path d="m3.5 17 5-4.5 4 3.5 3-2.5 5 4"/>
+          </svg>
+          Galeria
+        </button>
+      </div>
+      <div class="thumbs grid" id="fot-thumbs"></div>
+      <p class="err" id="fot-err">Junta pelo menos uma fotografia.</p>
+    </section>
+
+    <!-- Observações --------------------------------------------------------->
+    <section class="card">
+      <div class="card-head"><h2>Observações</h2></div>
+      <p class="card-hint">Opcional — algo que as fotografias não mostrem.</p>
+      <textarea id="obs" maxlength="600"
+                placeholder="Ex.: risco na porta já existente antes da recolha."></textarea>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="totals">
+      <span id="tot-count">Sem fotografias</span>
+      <span>Total <strong id="tot-size">0 KB</strong></span>
+    </div>
+    <button type="button" class="send" id="send" disabled>
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
+           stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <circle cx="18" cy="5" r="2.8"/><circle cx="6" cy="12" r="2.8"/>
+        <circle cx="18" cy="19" r="2.8"/>
+        <path d="m8.5 10.6 7-3.7m-7 6.5 7 3.7"/>
+      </svg>
+      Partilhar registo
+    </button>
+    <p class="dest">Destino <b id="dest-mail">recolhas@cate.com.pt</b></p>
+  </footer>
+
+</div>
+
+<div id="toast" role="status" aria-live="polite"></div>
+
+<div id="done">
+  <div class="done-mark">
+    <!-- Entregue à app de email, mas ainda por enviar -->
+    <svg id="done-icon-aviso" viewBox="0 0 24 24" fill="none" stroke-width="1.9"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+      <rect x="2.5" y="5" width="19" height="14" rx="2.4"/>
+      <path d="m3 7 9 6 9-6"/>
+    </svg>
+    <!-- Enviado mesmo (só no modo de envio automático) -->
+    <svg id="done-icon-ok" viewBox="0 0 24 24" fill="none" stroke-width="2.6"
+         stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" hidden>
+      <path d="m4 12.5 5.5 5.5L20 7"/>
+    </svg>
+  </div>
+  <h2 id="done-titulo">Falta enviar o email</h2>
+  <p id="done-msg"></p>
+  <div class="done-acoes">
+    <button type="button" class="again primaria" id="retry">Partilhar outra vez</button>
+    <button type="button" class="again" id="again">Novo registo</button>
+  </div>
+  <p class="done-rodape" id="done-rodape">
+    As fotografias continuam guardadas até criares um novo registo.
+  </p>
+</div>
+
+<!-- Entradas de ficheiro (escondidas) -->
+<input class="visually-hidden" type="file" id="in-etq-cam" accept="image/*" capture="environment">
+<input class="visually-hidden" type="file" id="in-etq-gal" accept="image/*">
+<input class="visually-hidden" type="file" id="in-fot-cam" accept="image/*" capture="environment">
+<input class="visually-hidden" type="file" id="in-fot-gal" accept="image/*" multiple>
+
+<script>
+"use strict";
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   CONFIGURAÇÃO — é aqui que se mexe
+   ═══════════════════════════════════════════════════════════════════════════ */
+const CONFIG = {
+  // Caixa de correio que recebe os registos.
+  EMAIL_DESTINO: "recolhas@cate.com.pt",
+
+  // Número máximo de fotografias do equipamento (a etiqueta conta à parte).
+  // Aumenta ou baixa este número à vontade — é o único sítio a alterar.
+  MAX_FOTOS: 12,
+
+  // Compressão. 1280 px no lado maior com qualidade 0.72 dá ficheiros de
+  // 120-180 KB, que continuam a deixar ler o número de série de uma etiqueta.
+  MAX_LADO: 1280,
+  QUALIDADE: 0.72,
+
+  // Envio automático (futuro). Enquanto for null, a página usa a partilha
+  // nativa do telemóvel. Ao apontar para um endpoint que reencaminhe por
+  // email, o botão passa a enviar sozinho, sem escolher a app.
+  ENDPOINT: null,
+};
+
+const MOMENTOS = {
+  recolha: { etiqueta: "RECOLHA", texto: "Recolha em casa do cliente" },
+  oficina: { etiqueta: "OFICINA", texto: "Entrada em oficina" },
+};
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Estado
+   ═══════════════════════════════════════════════════════════════════════════ */
+const estado = { momento: null, etiqueta: null, fotos: [] };
+let seqId = 0;
+let concluidoOk = false;   // só true quando houve confirmação real de envio
+
+const $ = (id) => document.getElementById(id);
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Leitura da data original (EXIF)
+
+   Permite tirar as fotografias sem rede em casa do cliente e só enviá-las
+   mais tarde: o email mostra a hora a que a fotografia foi mesmo tirada,
+   não a hora do envio.
+   ═══════════════════════════════════════════════════════════════════════════ */
+function lerIFD(view, inicio, le) {
+  const n = view.getUint16(inicio, le);
+  const entradas = {};
+  for (let i = 0; i < n; i++) {
+    const e = inicio + 2 + i * 12;
+    entradas[view.getUint16(e, le)] = { count: view.getUint32(e + 4, le), pos: e + 8 };
+  }
+  return entradas;
+}
+
+function lerAscii(view, entrada, tiff, le) {
+  let pos = entrada.pos;
+  if (entrada.count > 4) pos = tiff + view.getUint32(entrada.pos, le);
+  let s = "";
+  for (let i = 0; i < entrada.count; i++) {
+    const c = view.getUint8(pos + i);
+    if (c === 0) break;
+    s += String.fromCharCode(c);
+  }
+  return s;
+}
+
+function extrairDataExif(buffer) {
+  const view = new DataView(buffer);
+  if (view.byteLength < 16 || view.getUint16(0) !== 0xFFD8) return null;  // não é JPEG
+
+  let offset = 2;
+  while (offset + 4 < view.byteLength) {
+    if (view.getUint8(offset) !== 0xFF) return null;
+    const marcador = view.getUint16(offset);
+    const tamanho = view.getUint16(offset + 2);
+
+    if (marcador === 0xFFE1) {
+      if (view.getUint32(offset + 4) !== 0x45786966) return null;   // "Exif"
+      const tiff = offset + 10;
+      const le = view.getUint16(tiff) === 0x4949;                   // II = little endian
+      const ifd0 = lerIFD(view, tiff + view.getUint32(tiff + 4, le), le);
+      const ponteiro = ifd0[0x8769];
+      if (!ponteiro) return null;
+      const exif = lerIFD(view, tiff + view.getUint32(ponteiro.pos, le), le);
+      const entrada = exif[0x9003] || exif[0x9004];                 // DateTimeOriginal
+      if (!entrada) return null;
+      const m = lerAscii(view, entrada, tiff, le)
+        .match(/^(\d{4}):(\d{2}):(\d{2})[ T](\d{2}):(\d{2}):(\d{2})/);
+      if (!m) return null;
+      return new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +m[6]);
+    }
+
+    if (marcador === 0xFFDA) return null;   // início dos dados da imagem
+    offset += 2 + tamanho;
+  }
+  return null;
+}
+
+function dataOriginal(ficheiro) {
+  return new Promise((resolve) => {
+    const fr = new FileReader();
+    fr.onerror = () => resolve(null);
+    fr.onload = () => {
+      try { resolve(extrairDataExif(fr.result)); } catch (_) { resolve(null); }
+    };
+    // O bloco EXIF vive no início do ficheiro — 128 KB chegam de sobra.
+    fr.readAsArrayBuffer(ficheiro.slice(0, 131072));
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Compressão
+   ═══════════════════════════════════════════════════════════════════════════ */
+function viaElemento(ficheiro) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(ficheiro);
+    const img = new Image();
+    img.onload = () => { URL.revokeObjectURL(url); resolve(img); };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("imagem ilegível")); };
+    img.src = url;
+  });
+}
+
+async function comprimir(ficheiro) {
+  let fonte;
+  try {
+    fonte = await createImageBitmap(ficheiro, { imageOrientation: "from-image" });
+  } catch (_) {
+    fonte = await viaElemento(ficheiro);   // Safari mais antigo
+  }
+
+  const largura = fonte.width || fonte.naturalWidth;
+  const altura = fonte.height || fonte.naturalHeight;
+  const escala = Math.min(1, CONFIG.MAX_LADO / Math.max(largura, altura));
+
+  const canvas = document.createElement("canvas");
+  canvas.width = Math.round(largura * escala);
+  canvas.height = Math.round(altura * escala);
+  const ctx = canvas.getContext("2d");
+  ctx.imageSmoothingQuality = "high";
+  ctx.drawImage(fonte, 0, 0, canvas.width, canvas.height);
+  if (fonte.close) fonte.close();
+
+  const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", CONFIG.QUALIDADE));
+  if (!blob) throw new Error("falhou a compressão");
+  return blob;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Adicionar e remover fotografias
+   ═══════════════════════════════════════════════════════════════════════════ */
+async function adicionar(ficheiros, alvo) {
+  const lista = Array.from(ficheiros || []).filter((f) => f && f.type.startsWith("image/"));
+  if (!lista.length) return;
+
+  if (alvo === "fotos") {
+    const espaco = CONFIG.MAX_FOTOS - estado.fotos.length;
+    if (espaco <= 0) {
+      aviso(`Máximo de ${CONFIG.MAX_FOTOS} fotografias do equipamento.`);
+      return;
+    }
+    if (lista.length > espaco) {
+      aviso(`Só cabem mais ${espaco}. As restantes foram ignoradas.`);
+      lista.length = espaco;
+    }
+  }
+
+  for (const ficheiro of lista) {
+    const item = { id: ++seqId, estado: "a-processar" };
+    if (alvo === "etiqueta") estado.etiqueta = item;
+    else estado.fotos.push(item);
+    desenhar();
+
+    try {
+      const [blob, capturada] = await Promise.all([
+        comprimir(ficheiro),
+        dataOriginal(ficheiro),
+      ]);
+      item.blob = blob;
+      item.bytes = blob.size;
+      item.url = URL.createObjectURL(blob);
+      item.capturada = capturada;
+      item.estado = "pronta";
+    } catch (_) {
+      remover(item.id, alvo);
+      aviso(`Não foi possível processar "${ficheiro.name}".`);
+      continue;
+    }
+    desenhar();
+  }
+}
+
+function remover(id, alvo) {
+  if (alvo === "etiqueta") {
+    if (estado.etiqueta && estado.etiqueta.url) URL.revokeObjectURL(estado.etiqueta.url);
+    estado.etiqueta = null;
+  } else {
+    const i = estado.fotos.findIndex((f) => f.id === id);
+    if (i >= 0) {
+      if (estado.fotos[i].url) URL.revokeObjectURL(estado.fotos[i].url);
+      estado.fotos.splice(i, 1);
+    }
+  }
+  desenhar();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Desenho
+   ═══════════════════════════════════════════════════════════════════════════ */
+const kb = (bytes) => (bytes < 1024 * 1024
+  ? Math.round(bytes / 1024) + " KB"
+  : (bytes / 1024 / 1024).toFixed(1) + " MB");
+
+function cartaoFoto(item, alvo) {
+  const div = document.createElement("div");
+  div.className = "thumb" + (item.estado === "a-processar" ? " loading" : "");
+
+  if (item.estado === "a-processar") {
+    div.innerHTML = '<div class="spinner"></div>';
+    return div;
+  }
+
+  const img = document.createElement("img");
+  img.src = item.url;
+  img.alt = "";
+  div.appendChild(img);
+
+  const tam = document.createElement("span");
+  tam.className = "size";
+  tam.textContent = kb(item.bytes);
+  div.appendChild(tam);
+
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "del";
+  btn.setAttribute("aria-label", "Remover fotografia");
+  btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" ' +
+    'stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+  btn.addEventListener("click", () => remover(item.id, alvo));
+  div.appendChild(btn);
+
+  return div;
+}
+
+// A etiqueta interessa sobretudo na recolha. Na oficina passa a estar
+// assinalada como opcional e, se já tiver seguido na recolha deste serviço,
+// o técnico é avisado de que não precisa de a repetir.
+function actualizarCartaoEtiqueta() {
+  const naOficina = estado.momento === "oficina";
+  const num = $("num").value.trim();
+  const jaEnviada = naOficina && num ? etiquetaJaEnviada(num) : null;
+
+  $("etq-titulo").textContent = naOficina
+    ? "Etiqueta do equipamento · opcional"
+    : "Etiqueta do equipamento";
+
+  $("etq-hint").textContent = naOficina
+    ? "Só se não tiver sido enviada na recolha."
+    : "A chapa com a marca, o modelo e o número de série.";
+
+  const nota = $("etq-nota");
+  if (jaEnviada && !estado.etiqueta) {
+    $("etq-nota-txt").textContent =
+      `Etiqueta já enviada na recolha de ${dataCurta(jaEnviada)}. ` +
+      "Não é preciso repetir — mas podes, se a anterior não tiver ficado boa.";
+    nota.hidden = false;
+  } else {
+    nota.hidden = true;
+  }
+}
+
+function desenhar() {
+  actualizarCartaoEtiqueta();
+
+  const etqBox = $("etq-thumbs");
+  etqBox.textContent = "";
+  if (estado.etiqueta) etqBox.appendChild(cartaoFoto(estado.etiqueta, "etiqueta"));
+
+  const fotBox = $("fot-thumbs");
+  fotBox.textContent = "";
+  estado.fotos.forEach((f) => fotBox.appendChild(cartaoFoto(f, "fotos")));
+
+  $("cnt-etq").textContent = (estado.etiqueta ? 1 : 0) + " / 1";
+  $("cnt-etq").classList.toggle("full", !!estado.etiqueta);
+
+  const cnt = $("cnt-fotos");
+  cnt.textContent = estado.fotos.length + " / " + CONFIG.MAX_FOTOS;
+  cnt.classList.toggle("full", estado.fotos.length >= CONFIG.MAX_FOTOS);
+
+  $("etq-cam").disabled = !!estado.etiqueta;
+  $("etq-gal").disabled = !!estado.etiqueta;
+  const cheio = estado.fotos.length >= CONFIG.MAX_FOTOS;
+  $("fot-cam").disabled = cheio;
+  $("fot-gal").disabled = cheio;
+
+  const todas = prontas();
+  const bytes = todas.reduce((s, f) => s + f.bytes, 0);
+  $("tot-size").textContent = kb(bytes);
+
+  const nFotos = estado.fotos.filter((f) => f.estado === "pronta").length;
+  const temEtq = !!(estado.etiqueta && estado.etiqueta.estado === "pronta");
+  const partes = [];
+  if (temEtq) partes.push("1 etiqueta");
+  if (nFotos) partes.push(nFotos + (nFotos === 1 ? " foto" : " fotos"));
+  $("tot-count").textContent = partes.length ? partes.join(" + ") : "Sem fotografias";
+
+  $("send").disabled = todas.length === 0;
+}
+
+const prontas = () => [estado.etiqueta, ...estado.fotos]
+  .filter((f) => f && f.estado === "pronta");
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Avisos
+   ═══════════════════════════════════════════════════════════════════════════ */
+let toastTimer = null;
+function aviso(msg) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove("show"), 3200);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Validação
+   ═══════════════════════════════════════════════════════════════════════════ */
+function marcar(campoId, erroId, mal) {
+  if (campoId) $(campoId).classList.toggle("invalid", mal);
+  $(erroId).classList.toggle("show", mal);
+}
+
+function validar() {
+  const num = $("num").value.trim();
+  const tec = $("tec").value.trim();
+
+  const numMal = !/^\d+$/.test(num);
+  const tecMal = tec.length < 2;
+  const momMal = !estado.momento;
+  const fotMal = prontas().length === 0;
+
+  marcar("num", "num-err", numMal);
+  marcar("tec", "tec-err", tecMal);
+  marcar(null, "mom-err", momMal);
+  marcar(null, "fot-err", fotMal);
+
+  const primeiro = numMal ? "num" : tecMal ? "tec" : momMal ? "seg-recolha" : null;
+  if (primeiro) {
+    $(primeiro).scrollIntoView({ behavior: "smooth", block: "center" });
+    if (!momMal) $(primeiro).focus({ preventScroll: true });
+  }
+  return !(numMal || tecMal || momMal || fotMal);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Construção da mensagem
+   ═══════════════════════════════════════════════════════════════════════════ */
+const doisDig = (n) => String(n).padStart(2, "0");
+
+const dataHora = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}/` +
+  `${d.getFullYear()} ${doisDig(d.getHours())}:${doisDig(d.getMinutes())}`;
+
+// Versão para texto corrido, sem o ano.
+const dataCurta = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}, ` +
+  `às ${doisDig(d.getHours())}:${doisDig(d.getMinutes())}`;
+
+function construirFicheiros(num, momento) {
+  const ficheiros = [];
+  const nome = (sufixo) => `${num}_${momento}_${sufixo}.jpg`;
+
+  if (estado.etiqueta && estado.etiqueta.estado === "pronta") {
+    ficheiros.push(new File([estado.etiqueta.blob], nome("etiqueta"), { type: "image/jpeg" }));
+  }
+  estado.fotos.forEach((f, i) => {
+    if (f.estado === "pronta") {
+      ficheiros.push(new File([f.blob], nome(doisDig(i + 1)), { type: "image/jpeg" }));
+    }
+  });
+  return ficheiros;
+}
+
+function construirCorpo(num, momento) {
+  const todas = prontas();
+  const bytes = todas.reduce((s, f) => s + f.bytes, 0);
+  const obs = $("obs").value.trim();
+
+  const linhas = [
+    "Registo fotográfico — CATE",
+    "",
+    `Serviço: ${num}`,
+    `Momento: ${MOMENTOS[momento].texto}`,
+    `Técnico: ${$("tec").value.trim()}`,
+    `Enviado: ${dataHora(new Date())}`,
+    `Fotografias: ${todas.length} (${kb(bytes)})`,
+  ];
+
+  // Sem esta linha, quem abrir a caixa não distingue uma etiqueta dispensada
+  // de uma esquecida — e é essa a única diferença que interessa a quem arquiva.
+  if (!estado.etiqueta || estado.etiqueta.estado !== "pronta") {
+    const anterior = momento === "oficina" ? etiquetaJaEnviada(num) : null;
+    linhas.push(anterior
+      ? `Etiqueta: enviada no registo de recolha (${dataHora(anterior)}).`
+      : "Etiqueta: não incluída neste registo.");
+  }
+
+  const capturas = [];
+  if (estado.etiqueta && estado.etiqueta.capturada) {
+    capturas.push(`  · etiqueta — ${dataHora(estado.etiqueta.capturada)}`);
+  }
+  estado.fotos.forEach((f, i) => {
+    if (f.capturada) capturas.push(`  · ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
+  });
+  if (capturas.length) {
+    linhas.push("", "Tiradas em:", ...capturas);
+  }
+
+  if (obs) linhas.push("", "Observações:", obs);
+
+  return linhas.join("\n");
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Envio
+   ═══════════════════════════════════════════════════════════════════════════ */
+async function enviar() {
+  if (!validar()) return;
+
+  const num = $("num").value.trim();
+  const momento = estado.momento;
+  const ficheiros = construirFicheiros(num, momento);
+  const assunto = `[${MOMENTOS[momento].etiqueta}] Serviço ${num}`;
+  const corpo = construirCorpo(num, momento);
+
+  const temEtiqueta = !!(estado.etiqueta && estado.etiqueta.estado === "pronta");
+
+  $("send").disabled = true;
+  try {
+    if (CONFIG.ENDPOINT) {
+      await enviarPorEndpoint(ficheiros, assunto, corpo, num, momento);
+      if (momento === "recolha" && temEtiqueta) marcarEtiquetaEnviada(num);
+      concluir("ok", "Registo enviado",
+               "O registo chegou a " + CONFIG.EMAIL_DESTINO + ".");
+      return;
+    }
+
+    if (navigator.canShare && navigator.canShare({ files: ficheiros })) {
+      await navigator.share({ files: ficheiros, title: assunto, text: corpo });
+      if (momento === "recolha" && temEtiqueta) marcarEtiquetaEnviada(num);
+      concluir("aviso", "Falta enviar o email",
+               "A partilha só entregou as fotografias à app de email. " +
+               "Abre-a e carrega em enviar — só aí o registo chega a " +
+               CONFIG.EMAIL_DESTINO + ".");
+      return;
+    }
+
+    reserva(ficheiros, assunto, corpo);
+  } catch (erro) {
+    if (erro && erro.name === "AbortError") return;   // partilha cancelada
+    aviso("Não foi possível partilhar. A descarregar as fotografias.");
+    reserva(ficheiros, assunto, corpo);
+  } finally {
+    desenhar();
+  }
+}
+
+async function enviarPorEndpoint(ficheiros, assunto, corpo, num, momento) {
+  const dados = new FormData();
+  dados.append("para", CONFIG.EMAIL_DESTINO);
+  dados.append("assunto", assunto);
+  dados.append("corpo", corpo);
+  dados.append("servico", num);
+  dados.append("momento", momento);
+  ficheiros.forEach((f) => dados.append("fotos", f, f.name));
+
+  const resposta = await fetch(CONFIG.ENDPOINT, { method: "POST", body: dados });
+  if (!resposta.ok) throw new Error("o servidor respondeu " + resposta.status);
+}
+
+// Telemóveis sem partilha de ficheiros: descarrega as fotografias já
+// comprimidas e abre o email com o destinatário e o assunto preenchidos,
+// para o técnico só ter de as anexar.
+function reserva(ficheiros, assunto, corpo) {
+  ficheiros.forEach((f) => {
+    const url = URL.createObjectURL(f);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = f.name;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 20000);
+  });
+
+  // O ecrã final tem de ficar activo ANTES do mailto: senão o aviso de
+  // "sair da página" dispara por cima da abertura da app de email.
+  concluir("aviso", "Falta enviar o email",
+           "As fotografias foram descarregadas para o telemóvel. Anexa-as ao " +
+           "email que se abriu e carrega em enviar.");
+
+  const texto = corpo + "\n\n(Anexa as fotografias que acabaram de ser descarregadas.)";
+  window.location.href = `mailto:${CONFIG.EMAIL_DESTINO}` +
+    `?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(texto)}`;
+}
+
+function concluir(tipo, titulo, mensagem) {
+  const enviado = tipo === "ok";
+  concluidoOk = enviado;
+
+  $("done-titulo").textContent = titulo;
+  $("done-msg").textContent = mensagem;
+  $("done-icon-ok").hidden = !enviado;
+  $("done-icon-aviso").hidden = enviado;
+
+  // Partilhar não é garantia de envio: a app de email pode ter fechado, o
+  // rascunho pode ter-se perdido, pode ter-se escolhido a app errada. Enquanto
+  // não houver confirmação, tem de haver caminho de volta.
+  $("retry").hidden = enviado;
+  $("done-rodape").hidden = enviado;
+  $("again").textContent = enviado ? "Novo registo" : "Já enviei — novo registo";
+
+  $("done").classList.add("show");
+}
+
+function recomeçar() {
+  [estado.etiqueta, ...estado.fotos].forEach((f) => {
+    if (f && f.url) URL.revokeObjectURL(f.url);
+  });
+  estado.etiqueta = null;
+  estado.fotos = [];
+  $("obs").value = "";
+  $("num").value = "";
+  ["num-err", "tec-err", "mom-err", "fot-err"].forEach((id) => marcar(null, id, false));
+  $("num").classList.remove("invalid");
+  $("done").classList.remove("show");
+  concluidoOk = false;
+  desenhar();
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  $("num").focus();
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Ligações
+   ═══════════════════════════════════════════════════════════════════════════ */
+$("dest-mail").textContent = CONFIG.EMAIL_DESTINO;
+$("cnt-fotos").textContent = "0 / " + CONFIG.MAX_FOTOS;
+
+// Só dígitos no número do serviço — sem limite de comprimento. Espaços e
+// qualquer outro caracter são descartados à medida que se escreve, o que
+// também limpa o que venha colado da área de transferência.
+$("num").addEventListener("input", (e) => {
+  e.target.value = e.target.value.replace(/\D/g, "");
+  const n = e.target.value.length;
+  e.target.classList.toggle("longo", n > 12 && n <= 17);
+  e.target.classList.toggle("enorme", n > 17);
+  if (e.target.value) marcar("num", "num-err", false);
+  actualizarCartaoEtiqueta();
+});
+
+// O nome do técnico fica guardado no telemóvel — escreve-se uma vez só.
+// Em navegação privada, ou com os dados de site bloqueados, o localStorage
+// atira exceção: aí perde-se só a comodidade, não o funcionamento da página.
+const memoria = {
+  ler(chave) {
+    try { return localStorage.getItem(chave) || ""; } catch (_) { return ""; }
+  },
+  guardar(chave, valor) {
+    try { localStorage.setItem(chave, valor); } catch (_) { /* sem persistência */ }
+  },
+};
+
+/* ─────────────────────────────────────────────────────────────────────────
+   Registo das etiquetas já enviadas
+
+   Serve só para avisar o técnico de que não precisa de repetir a etiqueta na
+   oficina. Vive no telemóvel de quem enviou a recolha: se for outro técnico a
+   dar entrada na oficina, o aviso não aparece. Por isso é sempre uma
+   sugestão — nunca impede ninguém de enviar a etiqueta outra vez.
+   ───────────────────────────────────────────────────────────────────────── */
+const DIAS_MEMORIA = 180;
+
+function etiquetasEnviadas() {
+  try { return JSON.parse(memoria.ler("cate_etiquetas") || "{}"); } catch (_) { return {}; }
+}
+
+function marcarEtiquetaEnviada(num) {
+  const registo = etiquetasEnviadas();
+  registo[num] = new Date().toISOString();
+
+  // Limpeza: fora as entradas com mais de meio ano, para não crescer sem fim.
+  const limite = Date.now() - DIAS_MEMORIA * 86400000;
+  for (const chave of Object.keys(registo)) {
+    if (new Date(registo[chave]).getTime() < limite) delete registo[chave];
+  }
+  memoria.guardar("cate_etiquetas", JSON.stringify(registo));
+}
+
+function etiquetaJaEnviada(num) {
+  const quando = etiquetasEnviadas()[num];
+  if (!quando) return null;
+  const d = new Date(quando);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+$("tec").value = memoria.ler("cate_tecnico");
+$("tec").addEventListener("input", (e) => {
+  memoria.guardar("cate_tecnico", e.target.value.trim());
+  if (e.target.value.trim().length >= 2) marcar("tec", "tec-err", false);
+});
+
+document.querySelectorAll(".seg").forEach((botao) => {
+  botao.addEventListener("click", () => {
+    estado.momento = botao.dataset.momento;
+    document.querySelectorAll(".seg").forEach((b) => {
+      b.setAttribute("aria-pressed", String(b === botao));
+    });
+    marcar(null, "mom-err", false);
+    actualizarCartaoEtiqueta();
+  });
+});
+
+const ligarEntrada = (botaoId, entradaId, alvo) => {
+  $(botaoId).addEventListener("click", () => $(entradaId).click());
+  $(entradaId).addEventListener("change", (e) => {
+    const ficheiros = e.target.files;
+    e.target.value = "";           // permite repetir o mesmo ficheiro
+    adicionar(ficheiros, alvo);
+    marcar(null, "fot-err", false);
+  });
+};
+
+ligarEntrada("etq-cam", "in-etq-cam", "etiqueta");
+ligarEntrada("etq-gal", "in-etq-gal", "etiqueta");
+ligarEntrada("fot-cam", "in-fot-cam", "fotos");
+ligarEntrada("fot-gal", "in-fot-gal", "fotos");
+
+$("send").addEventListener("click", enviar);
+$("again").addEventListener("click", recomeçar);
+
+// Nova tentativa com as mesmas fotografias, sem ter de repetir nada.
+$("retry").addEventListener("click", () => {
+  $("done").classList.remove("show");
+  enviar();
+});
+
+// Evita perder fotografias por um toque acidental em "recarregar". Continua
+// activo depois de partilhar: enquanto não houver confirmação de envio, as
+// fotografias ainda podem fazer falta.
+window.addEventListener("beforeunload", (e) => {
+  if (prontas().length && !concluidoOk) {
+    e.preventDefault();
+    e.returnValue = "";
+  }
+});
+
+desenhar();
+</script>
+
+</body>
+</html>

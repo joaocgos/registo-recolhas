@@ -1,0 +1,16 @@
+{
+  "name": "CATE · Registo Fotográfico",
+  "short_name": "Registo CATE",
+  "description": "Registo fotográfico de equipamentos na recolha e na entrada em oficina.",
+  "lang": "pt-PT",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F7F7F8",
+  "theme_color": "#E30A17",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+  ]
+}
