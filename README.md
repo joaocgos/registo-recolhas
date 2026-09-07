@@ -56,7 +56,7 @@ sem os passar pelo Jekyll.
 2. Menu do browser → **Adicionar ao ecrã principal**.
 3. Passa a abrir como uma app, com ícone próprio e sem barra de endereço.
 
-Convém ainda **guardar `recolhas@cate.com.pt` nos contactos** do telemóvel.
+Convém ainda **guardar o endereço de destino nos contactos** do telemóvel.
 Depois do primeiro envio, a app de email passa a sugerir o endereço sozinha e
 o Android chega a mostrá-lo diretamente no menu de partilha.
 
@@ -121,7 +121,8 @@ Tudo o que se mexe está no bloco `CONFIG`, no início do `<script>` do
 
 ```js
 const CONFIG = {
-  EMAIL_DESTINO: "recolhas@cate.com.pt",
+  EMAIL_CAIXA: "recolhas",          // o endereço é montado em tempo de
+  EMAIL_DOMINIO: "cate.com.pt",     // execução, ver nota abaixo
   MAX_FOTOS: 12,      // fotografias do equipamento (a etiqueta conta à parte)
   MAX_LADO: 1280,     // píxeis no lado maior
   QUALIDADE: 0.72,    // 0 a 1
@@ -168,6 +169,51 @@ Os anexos saem como `26000123_recolha_etiqueta.jpg`, `26000123_recolha_01.jpg`,
 O padrão é fixo e previsível de propósito: se algum dia se quiser arquivar esta
 caixa de correio automaticamente, o número do serviço e o momento lêem-se do
 nome do ficheiro e do assunto, sem depender de nada do lado da página.
+
+---
+
+## Segurança e privacidade
+
+A app não tem servidor, não tem base de dados e não guarda fotografias em lado
+nenhum: elas existem na memória do telemóvel até serem entregues à app de email.
+Não há dependências externas nem código de terceiros — o que reduz a superfície
+de ataque a quase nada.
+
+**As fotografias não levam a morada do cliente.** A recompressão passa a imagem
+por um `canvas`, o que descarta todos os metadados do original — incluindo as
+coordenadas GPS que os telemóveis gravam. A data em que a fotografia foi tirada
+é lida *antes* disso e vai no texto do email, por isso guarda-se o que é útil e
+deita-se fora o que exporia a casa do cliente. Verificado com uma imagem de
+teste com GPS: sai sem qualquer bloco EXIF.
+
+**O endereço de destino não aparece por extenso no código.** É montado em tempo
+de execução a partir de duas partes, e a página traz `noindex` e um
+`robots.txt`. Isto trava os robôs que recolhem emails para spam e mantém a
+página fora dos motores de busca. Não é segredo — quem abrir a página vê o
+endereço no rodapé — mas deixa de ser apanhável automaticamente.
+
+**A página é aberta a quem tiver o endereço.** Não tem autenticação, por opção:
+pôr logins nos telemóveis dos técnicos custaria mais do que protege. Quem
+descobrir o URL consegue produzir um email com o formato certo — mas consegue
+igualmente escrever um email à mão para a mesma caixa, por isso a app não
+acrescenta poder nenhum a um atacante.
+
+> **Importante para o futuro:** se algum dia se arquivar esta caixa
+> automaticamente, **não confiar no assunto nem no nome dos ficheiros** para
+> decidir o que é legítimo. Esses são falsificáveis por qualquer pessoa. O único
+> sinal de confiança é o **remetente** do email, que deve ser validado contra
+> uma lista de endereços conhecidos dos técnicos.
+
+**Riscos residuais assumidos:**
+
+- O nome do técnico é escrito à mão e não é verificado. Quem assina de facto é a
+  conta de email que envia.
+- O `localStorage` guarda o nome do técnico e os números de serviço que já
+  levaram etiqueta. Num telemóvel partilhado, outra pessoa com acesso ao mesmo
+  browser consegue lê-los.
+- A página pode ser embebida noutro site (`frame-ancestors` só se define por
+  cabeçalho HTTP, que o GitHub Pages não deixa configurar). Sem ações
+  privilegiadas na página, o proveito para um atacante é nulo.
 
 ---
 

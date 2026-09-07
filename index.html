@@ -5,6 +5,26 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>CATE · Registo de Recolhas</title>
 <meta name="description" content="Registo fotográfico de equipamentos na recolha e na entrada em oficina.">
+<meta name="robots" content="noindex, nofollow">
+
+<!--
+  A página não carrega nada de servidores externos: o CSS e o JS são inline e as
+  imagens são ficheiros irmãos ou blobs gerados no próprio telemóvel. Por isso
+  pode fechar-se quase tudo. O que isto garante na prática: mesmo que alguma vez
+  entre código indesejado na página, ele não consegue enviar as fotografias nem
+  os dados para lado nenhum, porque connect-src fica bloqueado por omissão.
+
+  Se algum dia se ativar o CONFIG.ENDPOINT, é preciso acrescentar aqui
+  "connect-src https://o-teu-endpoint;" — senão o envio é bloqueado em silêncio.
+-->
+<meta http-equiv="Content-Security-Policy" content="
+  default-src 'none';
+  img-src 'self' blob:;
+  style-src 'self' 'unsafe-inline';
+  script-src 'self' 'unsafe-inline';
+  manifest-src 'self';
+  form-action 'none';
+  base-uri 'none'">
 <meta name="theme-color" content="#E30A17">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icon-192.png">
@@ -337,8 +357,7 @@
 
   <header>
     <div class="header-in">
-      <img src="logo.png" alt="CATE"
-           onerror="this.hidden=true; this.nextElementSibling.hidden=false;">
+      <img src="logo.png" alt="CATE" id="logo">
       <span class="marca" hidden>CATE</span>
       <div class="header-sep"></div>
       <div class="titulo">
@@ -496,7 +515,7 @@
       </svg>
       Partilhar registo
     </button>
-    <p class="dest">Destino <b id="dest-mail">recolhas@cate.com.pt</b></p>
+    <p class="dest">Destino <b id="dest-mail">a carregar…</b></p>
   </footer>
 
 </div>
@@ -541,8 +560,12 @@
    CONFIGURAÇÃO — é aqui que se mexe
    ═══════════════════════════════════════════════════════════════════════════ */
 const CONFIG = {
-  // Caixa de correio que recebe os registos.
-  EMAIL_DESTINO: "recolhas@cate.com.pt",
+  // Caixa de correio que recebe os registos. Guardado em pedaços de propósito:
+  // esta página é servida publicamente, e um endereço escrito por extenso no
+  // código-fonte é apanhado pelos robôs que recolhem emails para spam.
+  // Para o mudar, altera as duas partes — a arroba é acrescentada abaixo.
+  EMAIL_CAIXA: "recolhas",
+  EMAIL_DOMINIO: "cate.com.pt",
 
   // Número máximo de fotografias do equipamento (a etiqueta conta à parte).
   // Aumenta ou baixa este número à vontade — é o único sítio a alterar.
@@ -558,6 +581,8 @@ const CONFIG = {
   // email, o botão passa a enviar sozinho, sem escolher a app.
   ENDPOINT: null,
 };
+
+const EMAIL_DESTINO = CONFIG.EMAIL_CAIXA + String.fromCharCode(64) + CONFIG.EMAIL_DOMINIO;
 
 const MOMENTOS = {
   recolha: { etiqueta: "RECOLHA", texto: "Recolha em casa do cliente" },
@@ -977,7 +1002,7 @@ async function enviar() {
       await enviarPorEndpoint(ficheiros, assunto, corpo, num, momento);
       if (momento === "recolha" && temEtiqueta) marcarEtiquetaEnviada(num);
       concluir("ok", "Registo enviado",
-               "O registo chegou a " + CONFIG.EMAIL_DESTINO + ".");
+               "O registo chegou a " + EMAIL_DESTINO + ".");
       return;
     }
 
@@ -987,7 +1012,7 @@ async function enviar() {
       concluir("aviso", "Falta enviar o email",
                "A partilha só entregou as fotografias à app de email. " +
                "Abre-a e carrega em enviar — só aí o registo chega a " +
-               CONFIG.EMAIL_DESTINO + ".");
+               EMAIL_DESTINO + ".");
       return;
     }
 
@@ -1003,7 +1028,7 @@ async function enviar() {
 
 async function enviarPorEndpoint(ficheiros, assunto, corpo, num, momento) {
   const dados = new FormData();
-  dados.append("para", CONFIG.EMAIL_DESTINO);
+  dados.append("para", EMAIL_DESTINO);
   dados.append("assunto", assunto);
   dados.append("corpo", corpo);
   dados.append("servico", num);
@@ -1029,14 +1054,14 @@ function reserva(ficheiros, assunto, corpo) {
     setTimeout(() => URL.revokeObjectURL(url), 20000);
   });
 
-  // O ecrã final tem de ficar activo ANTES do mailto: senão o aviso de
+  // O ecrã final tem de ficar ativo ANTES do mailto: senão o aviso de
   // "sair da página" dispara por cima da abertura da app de email.
   concluir("aviso", "Falta enviar o email",
            "As fotografias foram descarregadas para o telemóvel. Anexa-as ao " +
            "email que se abriu e carrega em enviar.");
 
   const texto = corpo + "\n\n(Anexa as fotografias que acabaram de ser descarregadas.)";
-  window.location.href = `mailto:${CONFIG.EMAIL_DESTINO}` +
+  window.location.href = `mailto:${EMAIL_DESTINO}` +
     `?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(texto)}`;
 }
 
@@ -1079,7 +1104,14 @@ function recomeçar() {
 /* ═══════════════════════════════════════════════════════════════════════════
    Ligações
    ═══════════════════════════════════════════════════════════════════════════ */
-$("dest-mail").textContent = CONFIG.EMAIL_DESTINO;
+$("dest-mail").textContent = EMAIL_DESTINO;
+
+// Se o logótipo faltar, mostra o nome em texto em vez do ícone de imagem
+// partida. Ligado aqui em vez de um onerror inline no HTML.
+$("logo").addEventListener("error", () => {
+  $("logo").hidden = true;
+  document.querySelector(".marca").hidden = false;
+});
 $("cnt-fotos").textContent = "0 / " + CONFIG.MAX_FOTOS;
 
 // Só dígitos no número do serviço — sem limite de comprimento. Espaços e

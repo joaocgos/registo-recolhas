@@ -2,3 +2,6 @@
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Configuracao local do Claude Code, nao pertence ao site
+.claude/
