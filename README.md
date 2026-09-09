@@ -168,11 +168,19 @@ pelo código. Neste momento existe uma:
 
     numeroOpcional: true
 
-No Orçamento as fotografias servem para *produzir* o orçamento, por isso o
-serviço pode ainda não existir. Com a marca ligada, o rótulo passa a
-"Número do serviço (opcional)", a validação deixa de o exigir, o assunto fica
-`[ORCAMENTO · GARANTIA] Sem serviço atribuído` e os ficheiros começam pelo
-momento (`orcamento_garantia_01.jpg`).
+Está ligada no **Orçamento** (as fotografias servem para o *produzir*, logo o
+serviço pode não existir) e na **Recolha** (nem sempre há serviço aberto quando
+se vai buscar o equipamento).
+
+Com a marca ligada, o rótulo passa a "Número do serviço (opcional)" e aparece o
+campo **Nome do cliente** — que fica obrigatório se o número ficar vazio. Um
+registo tem sempre de ser atribuível a alguém: ou pelo serviço, ou pelo cliente.
+
+Sem número, o assunto identifica pelo cliente
+(`[RECOLHA · GARANTIA] Cliente: Maria Fernandes`) e os ficheiros levam um
+carimbo de data e hora à cabeça (`20260909_2322_recolha_garantia_01.jpg`), para
+que dois registos do mesmo tipo no mesmo dia não deem ficheiros com o mesmo
+nome.
 
 **Limites por equipamento** — `MAX_FOTOS` e `MAX_ETIQUETAS` valem para *cada*
 equipamento, não para o registo todo: com três equipamentos declarados cabem
