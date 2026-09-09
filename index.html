@@ -475,6 +475,9 @@
       </div>
     </section>
 
+    <!-- Folha de serviço: só quando há serviço associado --------------------->
+    <div id="folha"></div>
+
     <!-- Equipamentos -------------------------------------------------------->
     <section class="card">
       <div class="card-head">
@@ -580,6 +583,10 @@ const CONFIG = {
   // Quantos equipamentos se podem declarar num registo.
   MAX_EQUIPAMENTOS: 10,
 
+  // Fotografias da folha de serviço (uma folha pode ter frente e verso, ou
+  // mais do que uma página).
+  MAX_FOLHA: 4,
+
   // Compressão. 1280 px no lado maior com qualidade 0.72 dá ficheiros de
   // 120-180 KB, que continuam a deixar ler o número de série de uma etiqueta.
   MAX_LADO: 1280,
@@ -637,8 +644,8 @@ const MOMENTOS = [
     campoRecebidoPor: true,
     icone: '<path d="M21 8v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8"/><rect x="2.5" y="3.5" width="19" height="4.5" rx="1"/><path d="M10 12.5h4"/>' },
 
-  { chave: "montagem", nome: "Montagem", detalhe: "",
-    marca: "MONTAGEM", texto: "Montagem",
+  { chave: "montagem", nome: "Montagem", detalhe: "instalação de equipamento novo",
+    marca: "MONTAGEM", texto: "Montagem de equipamento novo (instalação)",
     icone: '<path d="M12 2.5 4 7v10l8 4.5 8-4.5V7z"/><path d="m4 7 8 4.5L20 7"/><path d="M12 11.5v10"/>' },
 
   { chave: "orcamento", nome: "Orçamento", detalhe: "fotos para orçamentar",
@@ -680,11 +687,17 @@ const estado = {
   // Cada equipamento tem as suas etiquetas e as suas fotografias, para quem
   // recebe o email conseguir dizer que foto pertence a que máquina.
   equipamentos: [{ etiquetas: [], fotos: [] }],
+  // A folha de serviço é do serviço, não de um equipamento — vive à parte.
+  folha: [],
 };
 
 // Qual o bloco e a secção que pediram o seletor de ficheiros. Há só quatro
 // <input> na página, reaproveitados por todos os equipamentos.
 let pedido = { eq: 0, alvo: "fotos" };
+
+// Se o cartão da folha de serviço está à vista, para só o redesenhar quando a
+// resposta muda — não a cada tecla escrita no número.
+let folhaVisivel = false;
 let seqId = 0;
 let concluidoOk = false;   // só true quando houve confirmação real de envio
 
@@ -807,6 +820,9 @@ async function comprimir(ficheiro) {
 // As etiquetas e as fotografias comportam-se da mesma maneira; só mudam o
 // limite e o nome. Isto evita ter dois caminhos quase iguais no código.
 function colecao(eq, alvo) {
+  if (alvo === "folha") {
+    return { itens: estado.folha, max: CONFIG.MAX_FOLHA, nome: "fotografias da folha" };
+  }
   const equipamento = estado.equipamentos[eq];
   return alvo === "etiquetas"
     ? { itens: equipamento.etiquetas, max: CONFIG.MAX_ETIQUETAS, nome: "etiquetas" }
@@ -820,7 +836,7 @@ function prontas() {
 
 // Todas as fotografias de todos os equipamentos, por ordem.
 function todosItens() {
-  const fora = [];
+  const fora = [...estado.folha];
   estado.equipamentos.forEach((e) => fora.push(...e.etiquetas, ...e.fotos));
   return fora;
 }
@@ -1006,6 +1022,55 @@ function construirSubseccao(eq, alvo, titulo, ajuda, entradaCam, entradaGal) {
   return bloco;
 }
 
+// A folha de serviço pertence ao serviço, não a um equipamento, por isso tem
+// cartão próprio — e só aparece quando há um número de serviço para a ligar.
+function haServico() {
+  return $("num").value.trim() !== "";
+}
+
+function desenharFolha() {
+  const caixa = $("folha");
+  caixa.textContent = "";
+  if (!haServico()) return;
+
+  const cartao = document.createElement("section");
+  cartao.className = "card";
+
+  const cab = document.createElement("div");
+  cab.className = "card-head";
+  const h2 = document.createElement("h2");
+  h2.textContent = "Folha de serviço · opcional";
+  const cnt = document.createElement("span");
+  cnt.className = "counter" +
+    (estado.folha.length >= CONFIG.MAX_FOLHA ? " full" : "");
+  cnt.textContent = estado.folha.length + " / " + CONFIG.MAX_FOLHA;
+  cab.append(h2, cnt);
+
+  const dica = document.createElement("p");
+  dica.className = "card-hint";
+  dica.textContent = "A folha preenchida à mão. Frente e verso, se for o caso.";
+
+  const pickers = document.createElement("div");
+  pickers.className = "pickers";
+  const cheio = estado.folha.length >= CONFIG.MAX_FOLHA;
+  const abrir = (entrada) => () => {
+    pedido = { eq: 0, alvo: "folha" };
+    $(entrada).click();
+  };
+  const bCam = botaoSeletor("Câmara", ICONE_CAMARA, abrir("in-etq-cam"));
+  const bGal = botaoSeletor("Galeria", ICONE_GALERIA, abrir("in-etq-gal"));
+  bCam.disabled = cheio;
+  bGal.disabled = cheio;
+  pickers.append(bCam, bGal);
+
+  const thumbs = document.createElement("div");
+  thumbs.className = "thumbs grid";
+  estado.folha.forEach((f) => thumbs.appendChild(cartaoFoto(f, 0, "folha")));
+
+  cartao.append(cab, dica, pickers, thumbs);
+  caixa.appendChild(cartao);
+}
+
 // Um cartão por equipamento, com as suas etiquetas e as suas fotografias.
 function desenharEquipamentos() {
   const caixa = $("equipamentos");
@@ -1064,6 +1129,7 @@ function desenharEquipamentos() {
 }
 
 function desenhar() {
+  desenharFolha();
   desenharEquipamentos();
   actualizarCartaoEtiqueta();
 
@@ -1080,9 +1146,11 @@ function desenhar() {
     .reduce((t, e) => t + e[chave].filter((f) => f.estado === "pronta").length, 0);
   const nEtq = conta("etiquetas");
   const nFot = conta("fotos");
+  const nFol = estado.folha.filter((f) => f.estado === "pronta").length;
   const partes = [];
   if (nEtq) partes.push(nEtq + (nEtq === 1 ? " etiqueta" : " etiquetas"));
   if (nFot) partes.push(nFot + (nFot === 1 ? " foto" : " fotos"));
+  if (nFol) partes.push(nFol + (nFol === 1 ? " folha" : " folhas"));
   $("tot-count").textContent = partes.length ? partes.join(" + ") : "Sem fotografias";
 
   $("send").disabled = todas.length === 0;
@@ -1279,8 +1347,15 @@ function construirFicheiros(num, momento, servico) {
   const carimbo = `${d.getFullYear()}${doisDig(d.getMonth() + 1)}${doisDig(d.getDate())}` +
                   `_${doisDig(d.getHours())}${doisDig(d.getMinutes())}`;
   const inicio = num ? `${num}_` : `${carimbo}_`;
+  const base = `${inicio}${momento}_${servico}_`;
   const nome = (eq, sufixo) =>
-    `${inicio}${momento}_${servico}_${varios ? "eq" + (eq + 1) + "_" : ""}${sufixo}.jpg`;
+    `${base}${varios ? "eq" + (eq + 1) + "_" : ""}${sufixo}.jpg`;
+
+  // A folha é do serviço, não de um equipamento: nunca leva o prefixo "eq".
+  estado.folha.filter((f) => f.estado === "pronta").forEach((f, i) => {
+    ficheiros.push(new File([f.blob], `${base}folha_${doisDig(i + 1)}.jpg`,
+                            { type: "image/jpeg" }));
+  });
 
   estado.equipamentos.forEach((equipamento, eq) => {
     const juntar = (itens, prefixo) => {
@@ -1299,6 +1374,7 @@ function construirCorpo(num, momento, servico) {
   const cliente = $("cliente").value.trim();
   // Só conta onde o campo existe — senão um valor antigo viajava para um
   // momento que nem o mostra.
+  const nFolha = estado.folha.filter((f) => f.estado === "pronta").length;
   const mom = MOMENTO_POR_CHAVE[momento];
   const recebido = mom && mom.campoRecebidoPor ? $("recebido").value.trim() : "";
   const todas = prontas();
@@ -1316,6 +1392,8 @@ function construirCorpo(num, momento, servico) {
     ...(recebido ? [`Recebido por: ${recebido}`] : []),
     `Enviado: ${dataHora(new Date())}`,
     `Equipamentos: ${estado.equipamentos.length}`,
+    ...(nFolha ? [`Folha de serviço: ${nFolha} ` +
+                  (nFolha === 1 ? "fotografia" : "fotografias")] : []),
     `Fotografias: ${todas.length} (${kb(bytes)})`,
   ];
 
@@ -1333,6 +1411,13 @@ function construirCorpo(num, momento, servico) {
 
   const capturas = [];
   const varios = estado.equipamentos.length > 1;
+
+  estado.folha.forEach((f, i) => {
+    if (f.capturada) {
+      capturas.push(`  · folha ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
+    }
+  });
+
   estado.equipamentos.forEach((equipamento, eq) => {
     const linhas_eq = [];
     equipamento.etiquetas.forEach((f, i) => {
@@ -1472,6 +1557,7 @@ function recomeçar() {
   // Mantém-se o número de equipamentos: quem faz cinco máquinas seguidas num
   // hotel não quer voltar a contá-las a cada registo.
   estado.equipamentos = estado.equipamentos.map(() => ({ etiquetas: [], fotos: [] }));
+  estado.folha = [];
   $("obs").value = "";
   $("num").value = "";
   $("cliente").value = "";
@@ -1511,6 +1597,11 @@ $("num").addEventListener("input", (e) => {
   if (e.target.value) marcar("num", "num-err", false);
   actualizarCampoNumero();
   actualizarCartaoEtiqueta();
+  const agora = haServico();
+  if (agora !== folhaVisivel) {
+    folhaVisivel = agora;
+    desenharFolha();
+  }
 });
 
 $("cliente").addEventListener("input", (e) => {

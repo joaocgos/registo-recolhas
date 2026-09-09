@@ -94,6 +94,19 @@ escolheu-se a app errada — o ecrã final tem **Partilhar outra vez**, que repe
 tudo com as mesmas fotografias. Estas só desaparecem quando se toca em
 *Já enviei — novo registo*.
 
+### Folha de serviço
+
+Quando há um número de serviço preenchido — obrigatório ou não — aparece um
+cartão para fotografar a folha de serviço. É opcional, cabem quatro fotografias
+(frente, verso, páginas seguintes), e os ficheiros saem como
+`26000123_recolha_garantia_folha_01.jpg`.
+
+Ao contrário das etiquetas e das fotografias, a folha pertence ao **serviço** e
+não a um equipamento: por isso tem cartão próprio e o nome do ficheiro nunca
+leva o prefixo `eq`, mesmo num registo com vários equipamentos.
+
+Sem número de serviço o cartão não aparece — não haveria folha a que se referir.
+
 ### Vários equipamentos
 
 Um registo pode cobrir mais do que um equipamento — típico em hotelaria, onde
