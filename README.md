@@ -94,10 +94,26 @@ escolheu-se a app errada — o ecrã final tem **Partilhar outra vez**, que repe
 tudo com as mesmas fotografias. Estas só desaparecem quando se toca em
 *Já enviei — novo registo*.
 
+### Vários equipamentos
+
+Um registo pode cobrir mais do que um equipamento — típico em hotelaria, onde
+se vai lá uma vez e se mexe em cinco máquinas. O contador no cartão
+*Equipamentos* faz aparecer um bloco por cada, com etiquetas e fotografias
+próprias.
+
+Isto existe para quem recebe o email conseguir dizer que fotografia pertence a
+que máquina. Sem os blocos, cinco equipamentos dariam um monte único de fotos
+indistinguíveis.
+
+Baixar o contador não apaga nada em silêncio: se o último bloco tiver
+fotografias, o contador recusa e pede que sejam removidas primeiro. E ao
+partilhar, um bloco vazio no meio dos outros é assinalado pelo nome
+("O equipamento 2 não tem fotografias") em vez de passar despercebido.
+
 ### As etiquetas
 
-Cabem várias por registo — há equipamentos com mais do que uma chapa, e às
-vezes é preciso repetir uma que saiu tremida. O limite está em 6.
+Cabem várias por equipamento — há máquinas com mais do que uma chapa, e às
+vezes é preciso repetir uma que saiu tremida.
 
 Se o serviço já tiver levado etiquetas noutro registo, aparece um aviso a
 dizer em qual e quando. É só informação: não desaconselha repetir, porque uma
@@ -127,8 +143,9 @@ Tudo o que se mexe está no bloco `CONFIG`, no início do `<script>` do
 const CONFIG = {
   EMAIL_CAIXA: "recolhas",          // o endereço é montado em tempo de
   EMAIL_DOMINIO: "cate.com.pt",     // execução, ver nota abaixo
-  MAX_FOTOS: 12,      // fotografias do equipamento
-  MAX_ETIQUETAS: 6,   // etiquetas (contam à parte das fotografias)
+  MAX_FOTOS: 6,         // fotografias POR equipamento
+  MAX_ETIQUETAS: 2,     // etiquetas POR equipamento
+  MAX_EQUIPAMENTOS: 10, // equipamentos declaráveis num registo
   MAX_LADO: 1280,     // píxeis no lado maior
   QUALIDADE: 0.72,    // 0 a 1
   ENDPOINT: null,
@@ -145,9 +162,9 @@ Cada entrada precisa de `chave` (vai no nome do ficheiro), `marca` (prefixo do
 assunto, sem acentos), `nome`, `texto` (corpo do email), `icone` e, se fizer
 sentido, `detalhe` para a segunda linha do botão — que pode ficar vazia.
 
-**Limite de fotografias** — `MAX_FOTOS`. Está em 12 por ser um valor folgado
-para um registo completo. Se na prática ninguém passar de 5, baixa-se; se
-faltarem, sobe-se. É o único sítio a alterar.
+**Limites por equipamento** — `MAX_FOTOS` e `MAX_ETIQUETAS` valem para *cada*
+equipamento, não para o registo todo: com três equipamentos declarados cabem
+três vezes isto. Os valores são provisórios; ajustar com o uso real.
 
 **Tamanho dos ficheiros** — com 1280 px e qualidade 0.72, uma fotografia de
 telemóvel passa de 3–5 MB para cerca de 120–180 KB, e continua a deixar ler o
@@ -178,11 +195,18 @@ serviço de email e a uma chave guardada no servidor.
 
 ## Nome dos ficheiros
 
-Os anexos saem como `26000123_oficina_fora_garantia_etiqueta_01.jpg` e
-`26000123_oficina_fora_garantia_01.jpg` — ou seja,
-`{serviço}_{momento}_{serviço}_{n}.jpg`, com as etiquetas a levarem `etiqueta_`
-antes do número. O assunto acompanha:
-`[OFICINA · FORA GARANTIA] Serviço 26000123`.
+Com um só equipamento:
+
+    26000123_oficina_fora_garantia_etiqueta_01.jpg
+    26000123_oficina_fora_garantia_01.jpg
+
+Com vários, entra o número do equipamento — que só aparece quando é preciso,
+para não alongar o nome no caso comum:
+
+    26000123_recolha_hotelaria_eq1_etiqueta_01.jpg
+    26000123_recolha_hotelaria_eq2_01.jpg
+
+O assunto acompanha: `[OFICINA · FORA GARANTIA] Serviço 26000123`.
 
 O padrão é fixo e previsível de propósito: se algum dia se quiser arquivar esta
 caixa de correio automaticamente, o número do serviço e o tipo lêem-se do

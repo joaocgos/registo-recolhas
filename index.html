@@ -226,6 +226,52 @@
   .pick:active { background: var(--red-soft); border-color: var(--red); color: var(--red); }
   .pick:disabled { opacity: .4; cursor: not-allowed; }
 
+  /* ── Contador de equipamentos ─────────────────────────────────────────── */
+  .stepper {
+    display: flex; align-items: center; gap: 14px;
+    background: var(--bg);
+    border: 1.5px solid var(--line);
+    border-radius: var(--r-md);
+    padding: 6px;
+  }
+  .stepper button {
+    width: 46px; height: 46px; flex: none;
+    background: var(--card);
+    border: 1.5px solid var(--line);
+    border-radius: 10px;
+    color: var(--ink);
+    font: inherit; font-size: 24px; font-weight: 600; line-height: 1;
+    cursor: pointer;
+  }
+  .stepper button:active { border-color: var(--red); color: var(--red); }
+  .stepper button:disabled { opacity: .35; cursor: not-allowed; }
+  .stepper span {
+    flex: 1; text-align: center;
+    font-size: 15px; font-weight: 600; color: var(--ink);
+  }
+
+  /* ── Sub-secções dentro de um equipamento ─────────────────────────────── */
+  .sub { margin-top: 18px; }
+  .sub:first-of-type { margin-top: 14px; }
+  .sub + .sub { border-top: 1px solid var(--line); padding-top: 16px; }
+  .sub-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 3px;
+  }
+  .sub-head h3 {
+    margin: 0; font-size: 13px; font-weight: 700; color: var(--ink-2);
+  }
+  .eq-titulo {
+    display: flex; align-items: center; gap: 9px;
+  }
+  .eq-num {
+    display: flex; align-items: center; justify-content: center;
+    width: 24px; height: 24px; flex: none;
+    border-radius: 50%;
+    background: var(--red); color: #fff;
+    font-size: 12.5px; font-weight: 700;
+  }
+
   /* ── Miniaturas ───────────────────────────────────────────────────────── */
   .thumbs { display: grid; gap: 10px; margin-top: 14px; }
   .thumbs.grid { grid-template-columns: repeat(3, 1fr); }
@@ -413,73 +459,24 @@
       </div>
     </section>
 
-    <!-- Etiqueta ------------------------------------------------------------>
+    <!-- Equipamentos -------------------------------------------------------->
     <section class="card">
       <div class="card-head">
-        <h2 id="etq-titulo">Etiquetas do equipamento</h2>
-        <span class="counter" id="cnt-etq">0 / 6</span>
+        <h2>Equipamentos</h2>
+        <span class="counter" id="cnt-eq">1</span>
       </div>
-      <p class="card-hint" id="etq-hint">A chapa com a marca, o modelo e o número de série. Se o equipamento tiver mais do que uma, junta todas.</p>
+      <p class="card-hint">Quantos equipamentos leva este registo.</p>
 
-      <div class="nota" id="etq-nota" hidden>
-        <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
-             stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-          <circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/>
-        </svg>
-        <span id="etq-nota-txt"></span>
+      <div class="stepper">
+        <button type="button" id="eq-menos" aria-label="Menos um equipamento">−</button>
+        <span id="eq-valor">1 equipamento</span>
+        <button type="button" id="eq-mais" aria-label="Mais um equipamento">+</button>
       </div>
-
-      <div class="pickers">
-        <button type="button" class="pick" id="etq-cam">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 8h3.5L8 5.5h8L17.5 8H21v11H3z"/><circle cx="12" cy="13" r="3.6"/>
-          </svg>
-          Câmara
-        </button>
-        <button type="button" class="pick" id="etq-gal">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="4.5" width="18" height="15" rx="2.2"/>
-            <circle cx="8.5" cy="10" r="1.6"/><path d="m3.5 17 5-4.5 4 3.5 3-2.5 5 4"/>
-          </svg>
-          Galeria
-        </button>
-      </div>
-      <div class="thumbs grid" id="etq-thumbs"></div>
     </section>
 
-    <!-- Fotos do equipamento ------------------------------------------------>
-    <section class="card">
-      <div class="card-head">
-        <h2>Fotos do equipamento</h2>
-        <span class="counter" id="cnt-fotos">0 / 12</span>
-      </div>
-      <p class="card-hint" id="fotos-hint">
-        O estado do equipamento e qualquer dano visível. Com a câmara,
-        toca outra vez para a fotografia seguinte.
-      </p>
-
-      <div class="pickers">
-        <button type="button" class="pick" id="fot-cam">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 8h3.5L8 5.5h8L17.5 8H21v11H3z"/><circle cx="12" cy="13" r="3.6"/>
-          </svg>
-          Câmara
-        </button>
-        <button type="button" class="pick" id="fot-gal">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.8"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <rect x="3" y="4.5" width="18" height="15" rx="2.2"/>
-            <circle cx="8.5" cy="10" r="1.6"/><path d="m3.5 17 5-4.5 4 3.5 3-2.5 5 4"/>
-          </svg>
-          Galeria
-        </button>
-      </div>
-      <div class="thumbs grid" id="fot-thumbs"></div>
-      <p class="err" id="fot-err">Junta pelo menos uma fotografia.</p>
-    </section>
+    <!-- Um bloco por equipamento, gerado no script ---------------------------->
+    <div id="equipamentos"></div>
+    <p class="err" id="fot-err">Junta pelo menos uma fotografia.</p>
 
     <!-- Observações --------------------------------------------------------->
     <section class="card">
@@ -559,10 +556,13 @@ const CONFIG = {
   EMAIL_CAIXA: "recolhas",
   EMAIL_DOMINIO: "cate.com.pt",
 
-  // Número máximo de fotografias do equipamento (as etiquetas contam à parte).
-  // Aumenta ou baixa estes números à vontade — é o único sítio a alterar.
-  MAX_FOTOS: 12,
-  MAX_ETIQUETAS: 6,
+  // Limites POR equipamento. Um registo com três equipamentos permite três
+  // vezes isto. Valores provisórios — ajustar com o uso real.
+  MAX_FOTOS: 6,
+  MAX_ETIQUETAS: 2,
+
+  // Quantos equipamentos se podem declarar num registo.
+  MAX_EQUIPAMENTOS: 10,
 
   // Compressão. 1280 px no lado maior com qualidade 0.72 dá ficheiros de
   // 120-180 KB, que continuam a deixar ler o número de série de uma etiqueta.
@@ -641,7 +641,17 @@ const SERVICO_POR_CHAVE = POR_CHAVE(SERVICOS);
 /* ═══════════════════════════════════════════════════════════════════════════
    Estado
    ═══════════════════════════════════════════════════════════════════════════ */
-const estado = { momento: null, servico: null, etiquetas: [], fotos: [] };
+const estado = {
+  momento: null,
+  servico: null,
+  // Cada equipamento tem as suas etiquetas e as suas fotografias, para quem
+  // recebe o email conseguir dizer que foto pertence a que máquina.
+  equipamentos: [{ etiquetas: [], fotos: [] }],
+};
+
+// Qual o bloco e a secção que pediram o seletor de ficheiros. Há só quatro
+// <input> na página, reaproveitados por todos os equipamentos.
+let pedido = { eq: 0, alvo: "fotos" };
 let seqId = 0;
 let concluidoOk = false;   // só true quando houve confirmação real de envio
 
@@ -763,10 +773,23 @@ async function comprimir(ficheiro) {
    ═══════════════════════════════════════════════════════════════════════════ */
 // As etiquetas e as fotografias comportam-se da mesma maneira; só mudam o
 // limite e o nome. Isto evita ter dois caminhos quase iguais no código.
-function colecao(alvo) {
+function colecao(eq, alvo) {
+  const equipamento = estado.equipamentos[eq];
   return alvo === "etiquetas"
-    ? { itens: estado.etiquetas, max: CONFIG.MAX_ETIQUETAS, nome: "etiquetas" }
-    : { itens: estado.fotos, max: CONFIG.MAX_FOTOS, nome: "fotografias" };
+    ? { itens: equipamento.etiquetas, max: CONFIG.MAX_ETIQUETAS, nome: "etiquetas" }
+    : { itens: equipamento.fotos, max: CONFIG.MAX_FOTOS, nome: "fotografias" };
+}
+
+// Só as que já acabaram de comprimir — as outras ainda não têm blob.
+function prontas() {
+  return todosItens().filter((f) => f && f.estado === "pronta");
+}
+
+// Todas as fotografias de todos os equipamentos, por ordem.
+function todosItens() {
+  const fora = [];
+  estado.equipamentos.forEach((e) => fora.push(...e.etiquetas, ...e.fotos));
+  return fora;
 }
 
 function pareceImagem(f) {
@@ -777,7 +800,7 @@ function pareceImagem(f) {
   return /\.(jpe?g|png|heic|heif|webp|gif|bmp)$/i.test(f.name || "");
 }
 
-async function adicionar(ficheiros, alvo) {
+async function adicionar(ficheiros, eq, alvo) {
   const todos = Array.from(ficheiros || []);
   const lista = todos.filter(pareceImagem);
 
@@ -788,7 +811,7 @@ async function adicionar(ficheiros, alvo) {
     return;
   }
 
-  const col = colecao(alvo);
+  const col = colecao(eq, alvo);
   const espaco = col.max - col.itens.length;
   if (espaco <= 0) {
     aviso(`Máximo de ${col.max} ${col.nome}.`);
@@ -801,7 +824,7 @@ async function adicionar(ficheiros, alvo) {
 
   for (const ficheiro of lista) {
     const item = { id: ++seqId, estado: "a-processar" };
-    colecao(alvo).itens.push(item);
+    colecao(eq, alvo).itens.push(item);
     desenhar();
 
     try {
@@ -815,7 +838,7 @@ async function adicionar(ficheiros, alvo) {
       item.capturada = capturada;
       item.estado = "pronta";
     } catch (_) {
-      remover(item.id, alvo);
+      remover(item.id, eq, alvo);
       aviso(`Não foi possível processar "${ficheiro.name}".`);
       continue;
     }
@@ -823,8 +846,8 @@ async function adicionar(ficheiros, alvo) {
   }
 }
 
-function remover(id, alvo) {
-  const itens = colecao(alvo).itens;
+function remover(id, eq, alvo) {
+  const itens = colecao(eq, alvo).itens;
   const i = itens.findIndex((f) => f.id === id);
   if (i >= 0) {
     if (itens[i].url) URL.revokeObjectURL(itens[i].url);
@@ -840,7 +863,7 @@ const kb = (bytes) => (bytes < 1024 * 1024
   ? Math.round(bytes / 1024) + " KB"
   : (bytes / 1024 / 1024).toFixed(1) + " MB");
 
-function cartaoFoto(item, alvo) {
+function cartaoFoto(item, eq, alvo) {
   const div = document.createElement("div");
   div.className = "thumb" + (item.estado === "a-processar" ? " loading" : "");
 
@@ -865,22 +888,23 @@ function cartaoFoto(item, alvo) {
   btn.setAttribute("aria-label", "Remover fotografia");
   btn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" ' +
     'stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>';
-  btn.addEventListener("click", () => remover(item.id, alvo));
+  btn.addEventListener("click", () => remover(item.id, eq, alvo));
   div.appendChild(btn);
 
   return div;
 }
 
-// As etiquetas fazem falta em qualquer tipo de registo, por isso o cartão está
-// sempre visível. Se este serviço já levou etiquetas noutro registo, diz-se —
-// mas sem aconselhar a não repetir: uma etiqueta a mais nunca fez mal a
-// ninguém, e uma a menos obriga a voltar ao equipamento.
+// Se este serviço já levou etiquetas noutro registo, diz-se — mas sem
+// aconselhar a não repetir: uma etiqueta a mais nunca fez mal a ninguém, e uma
+// a menos obriga a voltar ao equipamento.
 function actualizarCartaoEtiqueta() {
   const num = $("num").value.trim();
   const anterior = num ? etiquetaJaEnviada(num) : null;
   const nota = $("etq-nota");
+  if (!nota) return;
 
-  if (anterior && !estado.etiquetas.length) {
+  const jaTem = estado.equipamentos.some((e) => e.etiquetas.length);
+  if (anterior && !jaTem) {
     $("etq-nota-txt").textContent =
       `Este serviço já levou etiquetas num registo de ${anterior.tipoNome}, ` +
       `a ${dataCurta(anterior.data)}.`;
@@ -890,34 +914,136 @@ function actualizarCartaoEtiqueta() {
   }
 }
 
+const ICONE_CAMARA =
+  '<path d="M3 8h3.5L8 5.5h8L17.5 8H21v11H3z"/><circle cx="12" cy="13" r="3.6"/>';
+const ICONE_GALERIA =
+  '<rect x="3" y="4.5" width="18" height="15" rx="2.2"/>' +
+  '<circle cx="8.5" cy="10" r="1.6"/><path d="m3.5 17 5-4.5 4 3.5 3-2.5 5 4"/>';
+
+function botaoSeletor(texto, icone, aoClicar) {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "pick";
+  b.innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.8" ' +
+    'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+    icone + "</svg><span></span>";
+  b.querySelector("span").textContent = texto;
+  b.addEventListener("click", aoClicar);
+  return b;
+}
+
+// Uma sub-secção (Etiquetas ou Fotografias) dentro de um bloco de equipamento.
+function construirSubseccao(eq, alvo, titulo, ajuda, entradaCam, entradaGal) {
+  const col = colecao(eq, alvo);
+  const bloco = document.createElement("div");
+  bloco.className = "sub";
+
+  const cab = document.createElement("div");
+  cab.className = "sub-head";
+  const h3 = document.createElement("h3");
+  h3.textContent = titulo;
+  const cnt = document.createElement("span");
+  cnt.className = "counter" + (col.itens.length >= col.max ? " full" : "");
+  cnt.textContent = col.itens.length + " / " + col.max;
+  cab.append(h3, cnt);
+
+  const dica = document.createElement("p");
+  dica.className = "card-hint";
+  dica.textContent = ajuda;
+
+  const pickers = document.createElement("div");
+  pickers.className = "pickers";
+  const cheio = col.itens.length >= col.max;
+  const abrir = (entrada) => () => {
+    pedido = { eq, alvo };
+    $(entrada).click();
+  };
+  const bCam = botaoSeletor("Câmara", ICONE_CAMARA, abrir(entradaCam));
+  const bGal = botaoSeletor("Galeria", ICONE_GALERIA, abrir(entradaGal));
+  bCam.disabled = cheio;
+  bGal.disabled = cheio;
+  pickers.append(bCam, bGal);
+
+  const thumbs = document.createElement("div");
+  thumbs.className = "thumbs grid";
+  col.itens.forEach((f) => thumbs.appendChild(cartaoFoto(f, eq, alvo)));
+
+  bloco.append(cab, dica, pickers, thumbs);
+  return bloco;
+}
+
+// Um cartão por equipamento, com as suas etiquetas e as suas fotografias.
+function desenharEquipamentos() {
+  const caixa = $("equipamentos");
+  caixa.textContent = "";
+  const varios = estado.equipamentos.length > 1;
+
+  estado.equipamentos.forEach((_, eq) => {
+    const cartao = document.createElement("section");
+    cartao.className = "card";
+
+    const cab = document.createElement("div");
+    cab.className = "card-head";
+    const titulo = document.createElement("div");
+    titulo.className = "eq-titulo";
+    if (varios) {
+      const bolha = document.createElement("span");
+      bolha.className = "eq-num";
+      bolha.textContent = String(eq + 1);
+      titulo.appendChild(bolha);
+    }
+    const h2 = document.createElement("h2");
+    h2.textContent = varios ? "Equipamento " + (eq + 1) : "Equipamento";
+    titulo.appendChild(h2);
+    cab.appendChild(titulo);
+    cartao.appendChild(cab);
+
+    // A nota das etiquetas anteriores só faz sentido uma vez, no primeiro.
+    if (eq === 0) {
+      const nota = document.createElement("div");
+      nota.className = "nota";
+      nota.id = "etq-nota";
+      nota.hidden = true;
+      nota.innerHTML =
+        '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" ' +
+        'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+        '<circle cx="12" cy="12" r="9"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>' +
+        '<span id="etq-nota-txt"></span>';
+      cartao.appendChild(nota);
+    }
+
+    cartao.appendChild(construirSubseccao(
+      eq, "etiquetas", "Etiquetas",
+      "A chapa com a marca, o modelo e o número de série.",
+      "in-etq-cam", "in-etq-gal"));
+
+    cartao.appendChild(construirSubseccao(
+      eq, "fotos", "Fotografias",
+      "O estado do equipamento e qualquer dano visível.",
+      "in-fot-cam", "in-fot-gal"));
+
+    caixa.appendChild(cartao);
+  });
+}
+
 function desenhar() {
+  desenharEquipamentos();
   actualizarCartaoEtiqueta();
 
-  const pintar = (caixaId, itens, alvo) => {
-    const caixa = $(caixaId);
-    caixa.textContent = "";
-    itens.forEach((f) => caixa.appendChild(cartaoFoto(f, alvo)));
-  };
-  pintar("etq-thumbs", estado.etiquetas, "etiquetas");
-  pintar("fot-thumbs", estado.fotos, "fotos");
-
-  const contador = (id, itens, max, camId, galId) => {
-    const el = $(id);
-    el.textContent = itens.length + " / " + max;
-    el.classList.toggle("full", itens.length >= max);
-    const cheio = itens.length >= max;
-    $(camId).disabled = cheio;
-    $(galId).disabled = cheio;
-  };
-  contador("cnt-etq", estado.etiquetas, CONFIG.MAX_ETIQUETAS, "etq-cam", "etq-gal");
-  contador("cnt-fotos", estado.fotos, CONFIG.MAX_FOTOS, "fot-cam", "fot-gal");
+  const n = estado.equipamentos.length;
+  $("cnt-eq").textContent = String(n);
+  $("eq-valor").textContent = n === 1 ? "1 equipamento" : n + " equipamentos";
+  $("eq-menos").disabled = n <= 1;
+  $("eq-mais").disabled = n >= CONFIG.MAX_EQUIPAMENTOS;
 
   const todas = prontas();
   $("tot-size").textContent = kb(todas.reduce((s, f) => s + f.bytes, 0));
 
-  const conta = (arr) => arr.filter((f) => f.estado === "pronta").length;
-  const nEtq = conta(estado.etiquetas);
-  const nFot = conta(estado.fotos);
+  const conta = (chave) => estado.equipamentos
+    .reduce((t, e) => t + e[chave].filter((f) => f.estado === "pronta").length, 0);
+  const nEtq = conta("etiquetas");
+  const nFot = conta("fotos");
   const partes = [];
   if (nEtq) partes.push(nEtq + (nEtq === 1 ? " etiqueta" : " etiquetas"));
   if (nFot) partes.push(nFot + (nFot === 1 ? " foto" : " fotos"));
@@ -925,9 +1051,6 @@ function desenhar() {
 
   $("send").disabled = todas.length === 0;
 }
-
-const prontas = () => [...estado.etiquetas, ...estado.fotos]
-  .filter((f) => f && f.estado === "pronta");
 
 // Constrói os botões de uma das listas. `campo` é a propriedade do estado que
 // a escolha preenche ("momento" ou "servico").
@@ -1003,11 +1126,23 @@ function validar() {
   const srvMal = !estado.servico;
   const fotMal = prontas().length === 0;
 
+  // Com vários equipamentos declarados, um bloco vazio é quase sempre um
+  // esquecimento — vale a pena dizer qual, em vez de deixar passar.
+  const vazio = estado.equipamentos.findIndex(
+    (e) => ![...e.etiquetas, ...e.fotos].some((f) => f.estado === "pronta"));
+  const faltaEq = !fotMal && estado.equipamentos.length > 1 && vazio >= 0;
+
   marcar("num", "num-err", numMal);
   marcar("tec", "tec-err", tecMal);
   marcar(null, "mom-err", momMal);
   marcar(null, "srv-err", srvMal);
-  marcar(null, "fot-err", fotMal);
+  const erroFotos = $("fot-err");
+  if (fotMal) {
+    erroFotos.textContent = "Junta pelo menos uma fotografia.";
+  } else if (faltaEq) {
+    erroFotos.textContent = `O equipamento ${vazio + 1} não tem fotografias.`;
+  }
+  erroFotos.classList.toggle("show", fotMal || faltaEq);
 
   const primeiro = momMal ? "momentos" : srvMal ? "servicos"
                  : numMal ? "num" : tecMal ? "tec" : null;
@@ -1015,7 +1150,11 @@ function validar() {
     $(primeiro).scrollIntoView({ behavior: "smooth", block: "center" });
     if (primeiro === "num" || primeiro === "tec") $(primeiro).focus({ preventScroll: true });
   }
-  return !(numMal || tecMal || momMal || srvMal || fotMal);
+  if (faltaEq) {
+    $("equipamentos").children[vazio]
+      .scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+  return !(numMal || tecMal || momMal || srvMal || fotMal || faltaEq);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1032,16 +1171,21 @@ const dataCurta = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}, 
 
 function construirFicheiros(num, momento, servico) {
   const ficheiros = [];
-  const nome = (sufixo) => `${num}_${momento}_${servico}_${sufixo}.jpg`;
+  const varios = estado.equipamentos.length > 1;
+  // Com um só equipamento não vale a pena carregar o nome com "eq1".
+  const nome = (eq, sufixo) =>
+    `${num}_${momento}_${servico}_${varios ? "eq" + (eq + 1) + "_" : ""}${sufixo}.jpg`;
 
-  const juntar = (itens, prefixo) => {
-    itens.filter((f) => f.estado === "pronta").forEach((f, i) => {
-      ficheiros.push(new File([f.blob], nome(prefixo + doisDig(i + 1)),
-                              { type: "image/jpeg" }));
-    });
-  };
-  juntar(estado.etiquetas, "etiqueta_");
-  juntar(estado.fotos, "");
+  estado.equipamentos.forEach((equipamento, eq) => {
+    const juntar = (itens, prefixo) => {
+      itens.filter((f) => f.estado === "pronta").forEach((f, i) => {
+        ficheiros.push(new File([f.blob], nome(eq, prefixo + doisDig(i + 1)),
+                                { type: "image/jpeg" }));
+      });
+    };
+    juntar(equipamento.etiquetas, "etiqueta_");
+    juntar(equipamento.fotos, "");
+  });
   return ficheiros;
 }
 
@@ -1058,12 +1202,15 @@ function construirCorpo(num, momento, servico) {
     `Tipo de serviço: ${SERVICO_POR_CHAVE[servico].texto}`,
     `Técnico: ${$("tec").value.trim()}`,
     `Enviado: ${dataHora(new Date())}`,
+    `Equipamentos: ${estado.equipamentos.length}`,
     `Fotografias: ${todas.length} (${kb(bytes)})`,
   ];
 
   // Sem esta linha, quem abrir a caixa não distingue uma etiqueta dispensada
   // de uma esquecida — e é essa a única diferença que interessa a quem arquiva.
-  if (!estado.etiquetas.some((f) => f.estado === "pronta")) {
+  const algumaEtiqueta = estado.equipamentos
+    .some((e) => e.etiquetas.some((f) => f.estado === "pronta"));
+  if (!algumaEtiqueta) {
     const anterior = etiquetaJaEnviada(num);
     linhas.push(anterior
       ? `Etiquetas: nenhuma neste registo — já enviadas no registo de ` +
@@ -1072,13 +1219,22 @@ function construirCorpo(num, momento, servico) {
   }
 
   const capturas = [];
-  estado.etiquetas.forEach((f, i) => {
-    if (f.capturada) {
-      capturas.push(`  · etiqueta ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
-    }
-  });
-  estado.fotos.forEach((f, i) => {
-    if (f.capturada) capturas.push(`  · ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
+  const varios = estado.equipamentos.length > 1;
+  estado.equipamentos.forEach((equipamento, eq) => {
+    const linhas_eq = [];
+    equipamento.etiquetas.forEach((f, i) => {
+      if (f.capturada) {
+        linhas_eq.push(`  · etiqueta ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
+      }
+    });
+    equipamento.fotos.forEach((f, i) => {
+      if (f.capturada) {
+        linhas_eq.push(`  · ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
+      }
+    });
+    if (!linhas_eq.length) return;
+    if (varios) capturas.push(` Equipamento ${eq + 1}:`);
+    capturas.push(...linhas_eq);
   });
   if (capturas.length) {
     linhas.push("", "Tiradas em:", ...capturas);
@@ -1103,7 +1259,8 @@ async function enviar() {
                   `${SERVICO_POR_CHAVE[servico].marca}] Serviço ${num}`;
   const corpo = construirCorpo(num, momento, servico);
 
-  const temEtiquetas = estado.etiquetas.some((f) => f.estado === "pronta");
+  const temEtiquetas = estado.equipamentos
+    .some((e) => e.etiquetas.some((f) => f.estado === "pronta"));
 
   $("send").disabled = true;
   try {
@@ -1195,11 +1352,12 @@ function concluir(tipo, titulo, mensagem) {
 }
 
 function recomeçar() {
-  [...estado.etiquetas, ...estado.fotos].forEach((f) => {
+  todosItens().forEach((f) => {
     if (f && f.url) URL.revokeObjectURL(f.url);
   });
-  estado.etiquetas = [];
-  estado.fotos = [];
+  // Mantém-se o número de equipamentos: quem faz cinco máquinas seguidas num
+  // hotel não quer voltar a contá-las a cada registo.
+  estado.equipamentos = estado.equipamentos.map(() => ({ etiquetas: [], fotos: [] }));
   $("obs").value = "";
   $("num").value = "";
   ["num-err", "tec-err", "mom-err", "srv-err", "fot-err"].forEach((id) => marcar(null, id, false));
@@ -1296,22 +1454,40 @@ desenharSeletor("momentos", MOMENTOS, "momento", "mom-err");
 desenharSeletor("servicos", SERVICOS, "servico", "srv-err");
 actualizarVisibilidade();
 
-const ligarEntrada = (botaoId, entradaId, alvo) => {
-  $(botaoId).addEventListener("click", () => $(entradaId).click());
+// Os botões vivem dentro dos blocos gerados; aqui só se liga o <input>, que é
+// partilhado. Quem carregou deixou o destino em `pedido`.
+const ligarEntrada = (entradaId) => {
   $(entradaId).addEventListener("change", (e) => {
     // `e.target.files` é uma lista VIVA: limpar o value esvazia-a. Copiar
     // para um array primeiro, senão adicionar() recebe zero ficheiros.
     const ficheiros = Array.from(e.target.files || []);
     e.target.value = "";           // permite repetir o mesmo ficheiro
-    adicionar(ficheiros, alvo);
+    adicionar(ficheiros, pedido.eq, pedido.alvo);
     marcar(null, "fot-err", false);
   });
 };
 
-ligarEntrada("etq-cam", "in-etq-cam", "etiquetas");
-ligarEntrada("etq-gal", "in-etq-gal", "etiquetas");
-ligarEntrada("fot-cam", "in-fot-cam", "fotos");
-ligarEntrada("fot-gal", "in-fot-gal", "fotos");
+["in-etq-cam", "in-etq-gal", "in-fot-cam", "in-fot-gal"].forEach(ligarEntrada);
+
+// Contador de equipamentos. Tirar um bloco que já tem fotografias apagava-as
+// sem aviso, por isso pede-se antes que sejam removidas à mão.
+$("eq-mais").addEventListener("click", () => {
+  if (estado.equipamentos.length >= CONFIG.MAX_EQUIPAMENTOS) return;
+  estado.equipamentos.push({ etiquetas: [], fotos: [] });
+  desenhar();
+});
+
+$("eq-menos").addEventListener("click", () => {
+  if (estado.equipamentos.length <= 1) return;
+  const ultimo = estado.equipamentos[estado.equipamentos.length - 1];
+  if (ultimo.etiquetas.length || ultimo.fotos.length) {
+    aviso(`O equipamento ${estado.equipamentos.length} ainda tem fotografias. ` +
+          "Remove-as primeiro.");
+    return;
+  }
+  estado.equipamentos.pop();
+  desenhar();
+});
 
 $("send").addEventListener("click", enviar);
 $("again").addEventListener("click", recomeçar);
