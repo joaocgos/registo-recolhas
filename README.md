@@ -162,11 +162,12 @@ Cada entrada precisa de `chave` (vai no nome do ficheiro), `marca` (prefixo do
 assunto, sem acentos), `nome`, `texto` (corpo do email), `icone` e, se fizer
 sentido, `detalhe` para a segunda linha do botão — que pode ficar vazia.
 
-**Exceções por momento.** Nem todos os momentos precisam dos mesmos campos, e
+**Exceções por momento.** Nem todos os momentos precisam das mesmas coisas, e
 essas diferenças declaram-se na própria entrada em vez de ficarem espalhadas
-pelo código. Neste momento existe uma:
+pelo código. Existem duas marcas:
 
     numeroOpcional: true
+    etiquetaObrigatoria: true
 
 Está ligada nos três momentos em que o serviço pode ainda não existir: a
 **Recolha** e a **Reparação no local** (vai-se a casa do cliente e o serviço é
@@ -180,6 +181,13 @@ ao processo.
 Com a marca ligada, o rótulo passa a "Número do serviço (opcional)" e aparece o
 campo **Nome do cliente** — que fica obrigatório se o número ficar vazio. Um
 registo tem sempre de ser atribuível a alguém: ou pelo serviço, ou pelo cliente.
+
+`etiquetaObrigatoria` está ligada na **Entrada Oficina**: é pela chapa que a
+oficina identifica a máquina que acabou de entrar, por isso não se deixa
+partilhar sem ela. O cartão passa a dizer "Etiquetas · obrigatória" e, se
+faltar, a validação aponta o equipamento em causa. Nos outros momentos as
+etiquetas continuam opcionais — há equipamentos sem chapa legível, e obrigar
+criaria um beco sem saída.
 
 Sem número, o assunto identifica pelo cliente
 (`[RECOLHA · GARANTIA] Cliente: Maria Fernandes`) e os ficheiros levam um

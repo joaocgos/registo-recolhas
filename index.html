@@ -462,7 +462,7 @@
       </div>
 
       <div class="field">
-        <label class="lbl" for="tec">Técnico</label>
+        <label class="lbl" for="tec">Registado por</label>
         <input id="tec" type="text" autocomplete="name" placeholder="O teu nome"
                aria-describedby="tec-err">
         <p class="err" id="tec-err">Indica o teu nome.</p>
@@ -620,6 +620,8 @@ const MOMENTOS = [
   // e a marca ficam curtas de propósito — são o que alonga assunto e ficheiros.
   { chave: "oficina", nome: "Entrada Oficina", detalhe: "por técnico ou pelo balcão",
     marca: "OFICINA", texto: "Entrada em oficina",
+    // É pela chapa que a oficina identifica a máquina que acabou de entrar.
+    etiquetaObrigatoria: true,
     icone: '<path d="M3 21V9.5l9-6 9 6V21z"/><path d="M7.5 21v-7h9v7"/><path d="M7.5 16.6h9M7.5 18.8h9"/>' },
 
   { chave: "entrega", nome: "Entrega", detalhe: "ao cliente",
@@ -1035,9 +1037,12 @@ function desenharEquipamentos() {
       cartao.appendChild(nota);
     }
 
+    const obrigatoria = etiquetaObrigatoria();
     cartao.appendChild(construirSubseccao(
-      eq, "etiquetas", "Etiquetas",
-      "A chapa com a marca, o modelo e o número de série.",
+      eq, "etiquetas", obrigatoria ? "Etiquetas · obrigatória" : "Etiquetas",
+      obrigatoria
+        ? "A chapa com a marca, o modelo e o número de série. É por ela que a oficina identifica a máquina, por isso não pode faltar."
+        : "A chapa com a marca, o modelo e o número de série.",
       "in-etq-cam", "in-etq-gal"));
 
     cartao.appendChild(construirSubseccao(
@@ -1104,9 +1109,12 @@ function desenharSeletor(caixaId, lista, campo, erroId) {
         o.setAttribute("aria-pressed", String(o === botao));
       });
       marcar(null, erroId, false);
-        actualizarVisibilidade();
+      actualizarVisibilidade();
       actualizarCampoNumero();
-      actualizarCartaoEtiqueta();
+      // Redesenhar os blocos: há momentos que mudam o que neles aparece (ex.:
+      // a etiqueta passar a obrigatória). Sem isto ficava o rótulo do momento
+      // anterior, e o técnico lia uma regra que já não era a dele.
+      desenhar();
     });
 
     caixa.appendChild(botao);
@@ -1140,6 +1148,11 @@ function actualizarCampoNumero() {
       ? "Nome do cliente (opcional)"
       : "Nome do cliente";
   }
+}
+
+function etiquetaObrigatoria() {
+  const m = MOMENTO_POR_CHAVE[estado.momento];
+  return !!(m && m.etiquetaObrigatoria);
 }
 
 // Sem número de serviço, o registo tem de ser atribuível a alguém.
@@ -1188,18 +1201,31 @@ function validar() {
     (e) => ![...e.etiquetas, ...e.fotos].some((f) => f.estado === "pronta"));
   const faltaEq = !fotMal && estado.equipamentos.length > 1 && vazio >= 0;
 
+  // Há momentos em que a chapa é o que identifica a máquina; aí não se deixa
+  // passar sem ela.
+  const semEtq = etiquetaObrigatoria()
+    ? estado.equipamentos.findIndex(
+        (e) => !e.etiquetas.some((f) => f.estado === "pronta"))
+    : -1;
+  const faltaEtq = !fotMal && !faltaEq && semEtq >= 0;
+
   marcar("num", "num-err", numMal);
   marcar("cliente", "cliente-err", cliMal);
   marcar("tec", "tec-err", tecMal);
   marcar(null, "mom-err", momMal);
   marcar(null, "srv-err", srvMal);
   const erroFotos = $("fot-err");
+  const varios = estado.equipamentos.length > 1;
   if (fotMal) {
     erroFotos.textContent = "Junta pelo menos uma fotografia.";
   } else if (faltaEq) {
     erroFotos.textContent = `O equipamento ${vazio + 1} não tem fotografias.`;
+  } else if (faltaEtq) {
+    erroFotos.textContent = varios
+      ? `O equipamento ${semEtq + 1} não tem etiqueta.`
+      : "Falta a fotografia da etiqueta do equipamento.";
   }
-  erroFotos.classList.toggle("show", fotMal || faltaEq);
+  erroFotos.classList.toggle("show", fotMal || faltaEq || faltaEtq);
 
   const primeiro = momMal ? "momentos" : srvMal ? "servicos"
                  : numMal ? "num" : cliMal ? "cliente" : tecMal ? "tec" : null;
@@ -1209,11 +1235,13 @@ function validar() {
       $(primeiro).focus({ preventScroll: true });
     }
   }
-  if (faltaEq) {
-    $("equipamentos").children[vazio]
+  const culpado = faltaEq ? vazio : faltaEtq ? semEtq : -1;
+  if (culpado >= 0) {
+    $("equipamentos").children[culpado]
       .scrollIntoView({ behavior: "smooth", block: "center" });
   }
-  return !(numMal || cliMal || tecMal || momMal || srvMal || fotMal || faltaEq);
+  return !(numMal || cliMal || tecMal || momMal || srvMal
+           || fotMal || faltaEq || faltaEtq);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1268,7 +1296,7 @@ function construirCorpo(num, momento, servico) {
     ...(cliente ? [`Cliente: ${cliente}`] : []),
     `Momento: ${MOMENTO_POR_CHAVE[momento].texto}`,
     `Tipo de serviço: ${SERVICO_POR_CHAVE[servico].texto}`,
-    `Técnico: ${$("tec").value.trim()}`,
+    `Registado por: ${$("tec").value.trim()}`,
     `Enviado: ${dataHora(new Date())}`,
     `Equipamentos: ${estado.equipamentos.length}`,
     `Fotografias: ${todas.length} (${kb(bytes)})`,
