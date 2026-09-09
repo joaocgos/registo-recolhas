@@ -445,7 +445,7 @@
       <p class="card-hint">Apenas dígitos, sem espaços.</p>
 
       <div class="field">
-        <label class="lbl" for="num">Número do serviço</label>
+        <label class="lbl" for="num" id="num-lbl">Número do serviço</label>
         <input id="num" type="text" inputmode="numeric" autocomplete="off"
                placeholder="26000000" aria-describedby="num-err">
         <p class="err" id="num-err">Indica o número do serviço.</p>
@@ -599,6 +599,10 @@ const MOMENTOS = [
     marca: "REPARACAO LOCAL", texto: "Reparação no local, em casa do cliente",
     icone: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>' },
 
+  { chave: "entrada_balcao", nome: "Entrada ao balcão", detalhe: "trazido pelo cliente",
+    marca: "ENTRADA BALCAO", texto: "Entrada ao balcão, trazido pelo cliente",
+    icone: '<path d="M3.5 9.5V20a1 1 0 0 0 1 1h15a1 1 0 0 0 1-1V9.5"/><path d="M2.5 9.5 4.5 3.5h15l2 6"/><path d="M2.5 9.5a3 3 0 0 0 6 0 3 3 0 0 0 6 0 3 3 0 0 0 6 0"/>' },
+
   { chave: "oficina", nome: "Oficina", detalhe: "entrada do equipamento",
     marca: "OFICINA", texto: "Entrada em oficina",
     icone: '<path d="M3 21V9.5l9-6 9 6V21z"/><path d="M7.5 21v-7h9v7"/><path d="M7.5 16.6h9M7.5 18.8h9"/>' },
@@ -613,6 +617,9 @@ const MOMENTOS = [
 
   { chave: "orcamento", nome: "Orçamento", detalhe: "fotos para orçamentar",
     marca: "ORCAMENTO", texto: "Fotografias para orçamento",
+    // As fotos servem para PRODUZIR o orçamento, por isso o serviço pode ainda
+    // não existir. Para abrir a mesma exceção noutro momento, basta esta linha.
+    numeroOpcional: true,
     icone: '<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>' },
 ];
 
@@ -1082,7 +1089,8 @@ function desenharSeletor(caixaId, lista, campo, erroId) {
         o.setAttribute("aria-pressed", String(o === botao));
       });
       marcar(null, erroId, false);
-      actualizarVisibilidade();
+        actualizarVisibilidade();
+      actualizarCampoNumero();
       actualizarCartaoEtiqueta();
     });
 
@@ -1092,6 +1100,22 @@ function desenharSeletor(caixaId, lista, campo, erroId) {
 
 // O resto do formulário só faz sentido depois de se saber o que se está a
 // registar — e assim deixa de ser possível preencher tudo e esquecer a escolha.
+// Nem todos os momentos exigem um número de serviço: no Orçamento as
+// fotografias servem para o produzir, e o serviço pode ainda não existir.
+function numeroObrigatorio() {
+  const m = MOMENTO_POR_CHAVE[estado.momento];
+  return !(m && m.numeroOpcional);
+}
+
+function actualizarCampoNumero() {
+  const obrigatorio = numeroObrigatorio();
+  $("num-lbl").textContent = obrigatorio
+    ? "Número do serviço"
+    : "Número do serviço (opcional)";
+  $("num").placeholder = obrigatorio ? "26000000" : "ainda sem número";
+  if (!obrigatorio) marcar("num", "num-err", false);
+}
+
 function actualizarVisibilidade() {
   $("resto").hidden = !(estado.momento && estado.servico);
 }
@@ -1120,7 +1144,7 @@ function validar() {
   const num = $("num").value.trim();
   const tec = $("tec").value.trim();
 
-  const numMal = !/^\d+$/.test(num);
+  const numMal = numeroObrigatorio() && !/^\d+$/.test(num);
   const tecMal = tec.length < 2;
   const momMal = !estado.momento;
   const srvMal = !estado.servico;
@@ -1173,8 +1197,11 @@ function construirFicheiros(num, momento, servico) {
   const ficheiros = [];
   const varios = estado.equipamentos.length > 1;
   // Com um só equipamento não vale a pena carregar o nome com "eq1".
+  // Sem número de serviço, o nome começa pelo momento — continua a dizer tudo
+  // o que interessa, sem um prefixo vazio.
+  const inicio = num ? `${num}_` : "";
   const nome = (eq, sufixo) =>
-    `${num}_${momento}_${servico}_${varios ? "eq" + (eq + 1) + "_" : ""}${sufixo}.jpg`;
+    `${inicio}${momento}_${servico}_${varios ? "eq" + (eq + 1) + "_" : ""}${sufixo}.jpg`;
 
   estado.equipamentos.forEach((equipamento, eq) => {
     const juntar = (itens, prefixo) => {
@@ -1197,7 +1224,7 @@ function construirCorpo(num, momento, servico) {
   const linhas = [
     "Registo fotográfico — CATE",
     "",
-    `Serviço: ${num}`,
+    num ? `Serviço: ${num}` : "Serviço: ainda sem número atribuído",
     `Momento: ${MOMENTO_POR_CHAVE[momento].texto}`,
     `Tipo de serviço: ${SERVICO_POR_CHAVE[servico].texto}`,
     `Técnico: ${$("tec").value.trim()}`,
@@ -1256,7 +1283,8 @@ async function enviar() {
   const servico = estado.servico;
   const ficheiros = construirFicheiros(num, momento, servico);
   const assunto = `[${MOMENTO_POR_CHAVE[momento].marca} · ` +
-                  `${SERVICO_POR_CHAVE[servico].marca}] Serviço ${num}`;
+                  `${SERVICO_POR_CHAVE[servico].marca}] ` +
+                  (num ? `Serviço ${num}` : "Sem serviço atribuído");
   const corpo = construirCorpo(num, momento, servico);
 
   const temEtiquetas = estado.equipamentos
@@ -1266,7 +1294,7 @@ async function enviar() {
   try {
     if (CONFIG.ENDPOINT) {
       await enviarPorEndpoint(ficheiros, assunto, corpo, num, momento, servico);
-      if (temEtiquetas) marcarEtiquetaEnviada(num, momento);
+      if (num && temEtiquetas) marcarEtiquetaEnviada(num, momento);
       concluir("ok", "Registo enviado",
                "O registo chegou a " + EMAIL_DESTINO + ".");
       return;
@@ -1274,7 +1302,7 @@ async function enviar() {
 
     if (navigator.canShare && navigator.canShare({ files: ficheiros })) {
       await navigator.share({ files: ficheiros, title: assunto, text: corpo });
-      if (temEtiquetas) marcarEtiquetaEnviada(num, momento);
+      if (num && temEtiquetas) marcarEtiquetaEnviada(num, momento);
       concluir("aviso", "Falta enviar o email",
                "A partilha só entregou as fotografias à app de email. " +
                "Abre-a e carrega em enviar — só aí o registo chega a " +

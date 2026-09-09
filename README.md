@@ -2,7 +2,8 @@
 
 Página para os técnicos dos serviços de rua enviarem fotografias dos
 equipamentos ao longo de um serviço. Cada registo é classificado por **momento**
-(recolha, reparação no local, oficina, entrega, montagem, orçamento) e por **tipo de serviço**
+(recolha, reparação no local, entrada ao balcão, oficina, entrega, montagem,
+orçamento) e por **tipo de serviço**
 (em garantia, fora de garantia, hotelaria, ar condicionado).
 
 Funciona sem servidor, sem base de dados e sem login. É só HTML, CSS e
@@ -161,6 +162,18 @@ são todos gerados a partir delas.
 Cada entrada precisa de `chave` (vai no nome do ficheiro), `marca` (prefixo do
 assunto, sem acentos), `nome`, `texto` (corpo do email), `icone` e, se fizer
 sentido, `detalhe` para a segunda linha do botão — que pode ficar vazia.
+
+**Exceções por momento.** Nem todos os momentos precisam dos mesmos campos, e
+essas diferenças declaram-se na própria entrada em vez de ficarem espalhadas
+pelo código. Neste momento existe uma:
+
+    numeroOpcional: true
+
+No Orçamento as fotografias servem para *produzir* o orçamento, por isso o
+serviço pode ainda não existir. Com a marca ligada, o rótulo passa a
+"Número do serviço (opcional)", a validação deixa de o exigir, o assunto fica
+`[ORCAMENTO · GARANTIA] Sem serviço atribuído` e os ficheiros começam pelo
+momento (`orcamento_garantia_01.jpg`).
 
 **Limites por equipamento** — `MAX_FOTOS` e `MAX_ETIQUETAS` valem para *cada*
 equipamento, não para o registo todo: com três equipamentos declarados cabem
