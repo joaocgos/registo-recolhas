@@ -467,6 +467,12 @@
                aria-describedby="tec-err">
         <p class="err" id="tec-err">Indica o teu nome.</p>
       </div>
+
+      <div class="field" id="campo-recebido" hidden>
+        <label class="lbl" for="recebido">Recebido por (opcional)</label>
+        <input id="recebido" type="text" autocomplete="off"
+               placeholder="Quem recebeu o equipamento">
+      </div>
     </section>
 
     <!-- Equipamentos -------------------------------------------------------->
@@ -626,6 +632,9 @@ const MOMENTOS = [
 
   { chave: "entrega", nome: "Entrega", detalhe: "ao cliente",
     marca: "ENTREGA", texto: "Entrega ao cliente",
+    // Numa entrega, quem recebeu é parte da prova. Opcional: não trava a
+    // partilha quando não se soube ou não se quis registar.
+    campoRecebidoPor: true,
     icone: '<path d="M21 8v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8"/><rect x="2.5" y="3.5" width="19" height="4.5" rx="1"/><path d="M10 12.5h4"/>' },
 
   { chave: "montagem", nome: "Montagem", detalhe: "",
@@ -1138,6 +1147,9 @@ function actualizarCampoNumero() {
   $("num").placeholder = obrigatorio ? "26000000" : "ainda sem número";
   if (!obrigatorio) marcar("num", "num-err", false);
 
+  const m = MOMENTO_POR_CHAVE[estado.momento];
+  $("campo-recebido").hidden = !(m && m.campoRecebidoPor);
+
   // O nome do cliente só aparece onde o número pode faltar. Aí passa a ser a
   // única forma de saber a quem pertence o registo.
   $("campo-cliente").hidden = obrigatorio;
@@ -1285,6 +1297,10 @@ function construirFicheiros(num, momento, servico) {
 
 function construirCorpo(num, momento, servico) {
   const cliente = $("cliente").value.trim();
+  // Só conta onde o campo existe — senão um valor antigo viajava para um
+  // momento que nem o mostra.
+  const mom = MOMENTO_POR_CHAVE[momento];
+  const recebido = mom && mom.campoRecebidoPor ? $("recebido").value.trim() : "";
   const todas = prontas();
   const bytes = todas.reduce((s, f) => s + f.bytes, 0);
   const obs = $("obs").value.trim();
@@ -1297,6 +1313,7 @@ function construirCorpo(num, momento, servico) {
     `Momento: ${MOMENTO_POR_CHAVE[momento].texto}`,
     `Tipo de serviço: ${SERVICO_POR_CHAVE[servico].texto}`,
     `Registado por: ${$("tec").value.trim()}`,
+    ...(recebido ? [`Recebido por: ${recebido}`] : []),
     `Enviado: ${dataHora(new Date())}`,
     `Equipamentos: ${estado.equipamentos.length}`,
     `Fotografias: ${todas.length} (${kb(bytes)})`,
@@ -1458,6 +1475,7 @@ function recomeçar() {
   $("obs").value = "";
   $("num").value = "";
   $("cliente").value = "";
+  $("recebido").value = "";
   ["num-err", "cliente-err", "tec-err", "mom-err", "srv-err", "fot-err"]
     .forEach((id) => marcar(null, id, false));
   $("num").classList.remove("invalid");

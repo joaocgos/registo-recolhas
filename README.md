@@ -168,6 +168,7 @@ pelo código. Existem duas marcas:
 
     numeroOpcional: true
     etiquetaObrigatoria: true
+    campoRecebidoPor: true
 
 Está ligada nos três momentos em que o serviço pode ainda não existir: a
 **Recolha** e a **Reparação no local** (vai-se a casa do cliente e o serviço é
@@ -188,6 +189,12 @@ partilhar sem ela. O cartão passa a dizer "Etiquetas · obrigatória" e, se
 faltar, a validação aponta o equipamento em causa. Nos outros momentos as
 etiquetas continuam opcionais — há equipamentos sem chapa legível, e obrigar
 criaria um beco sem saída.
+
+`campoRecebidoPor` está ligada na **Entrega**: faz aparecer um campo opcional
+"Recebido por". Numa entrega, quem recebeu é parte da prova — sem isso o registo
+mostra o estado do equipamento mas não que chegou às mãos de alguém. Fica
+opcional para não travar a partilha quando não se soube. O valor só entra no
+email nos momentos onde o campo existe.
 
 Sem número, o assunto identifica pelo cliente
 (`[RECOLHA · GARANTIA] Cliente: Maria Fernandes`) e os ficheiros levam um
