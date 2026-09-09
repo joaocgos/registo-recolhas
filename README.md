@@ -2,8 +2,7 @@
 
 Página para os técnicos dos serviços de rua enviarem fotografias dos
 equipamentos ao longo de um serviço. Cada registo é classificado por **momento**
-(recolha, reparação no local, entrada ao balcão, oficina, entrega, montagem,
-orçamento) e por **tipo de serviço**
+(recolha, reparação no local, entrada em oficina, entrega, montagem, orçamento) e por **tipo de serviço**
 (em garantia, fora de garantia, hotelaria, ar condicionado).
 
 Funciona sem servidor, sem base de dados e sem login. É só HTML, CSS e
