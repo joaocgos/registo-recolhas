@@ -158,7 +158,8 @@ const CONFIG = {
   EMAIL_DOMINIO: "cate.com.pt",     // execução, ver nota abaixo
   MAX_FOTOS: 6,         // fotografias POR equipamento
   MAX_ETIQUETAS: 2,     // etiquetas POR equipamento
-  MAX_EQUIPAMENTOS: 10, // equipamentos declaráveis num registo
+  MAX_EQUIPAMENTOS: 20, // equipamentos declaráveis num registo
+  AVISO_TAMANHO: 8 * 1024 * 1024,  // a partir daqui avisa que o registo é pesado
   MAX_LADO: 1280,     // píxeis no lado maior
   QUALIDADE: 0.72,    // 0 a 1
   ENDPOINT: null,

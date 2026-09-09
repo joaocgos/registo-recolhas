@@ -346,6 +346,8 @@
     font-size: 12px; color: var(--muted);
   }
   .dest b { color: var(--ink-2); font-weight: 600; }
+  #aviso-tamanho { color: var(--red); font-weight: 600; margin-bottom: 2px; }
+  .totals strong.pesado { color: var(--red); }
 
   /* ── Aviso flutuante ──────────────────────────────────────────────────── */
   #toast {
@@ -523,6 +525,9 @@
       </svg>
       Partilhar registo
     </button>
+    <p class="dest" id="aviso-tamanho" hidden>
+      Registo pesado — pode ser recusado pelo email. Divide em dois.
+    </p>
     <p class="dest">Destino <b id="dest-mail">a carregar…</b></p>
   </footer>
 
@@ -581,7 +586,11 @@ const CONFIG = {
   MAX_ETIQUETAS: 2,
 
   // Quantos equipamentos se podem declarar num registo.
-  MAX_EQUIPAMENTOS: 10,
+  MAX_EQUIPAMENTOS: 20,
+
+  // A partir daqui avisa-se: emails muito pesados são recusados por alguns
+  // servidores, e é melhor sabê-lo antes de partilhar do que depois.
+  AVISO_TAMANHO: 8 * 1024 * 1024,
 
   // Fotografias da folha de serviço (uma folha pode ter frente e verso, ou
   // mais do que uma página).
@@ -1152,7 +1161,14 @@ function desenhar() {
   $("eq-mais").disabled = n >= CONFIG.MAX_EQUIPAMENTOS;
 
   const todas = prontas();
-  $("tot-size").textContent = kb(todas.reduce((s, f) => s + f.bytes, 0));
+  const bytes = todas.reduce((s, f) => s + f.bytes, 0);
+  $("tot-size").textContent = kb(bytes);
+
+  // Um registo grande demais só falha na hora de enviar, quando o técnico já
+  // tirou tudo. Mais vale dizê-lo enquanto ainda dá para dividir.
+  const pesado = bytes > CONFIG.AVISO_TAMANHO;
+  $("tot-size").classList.toggle("pesado", pesado);
+  $("aviso-tamanho").hidden = !pesado;
 
   const conta = (chave) => estado.equipamentos
     .reduce((t, e) => t + e[chave].filter((f) => f.estado === "pronta").length, 0);
