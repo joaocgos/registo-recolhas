@@ -168,9 +168,14 @@ pelo código. Neste momento existe uma:
 
     numeroOpcional: true
 
-Está ligada no **Orçamento** (as fotografias servem para o *produzir*, logo o
-serviço pode não existir) e na **Recolha** (nem sempre há serviço aberto quando
-se vai buscar o equipamento).
+Está ligada nos três momentos em que o serviço pode ainda não existir: a
+**Recolha** e a **Reparação no local** (vai-se a casa do cliente e o serviço é
+aberto depois) e o **Orçamento** (as fotografias servem justamente para o
+*produzir*).
+
+Fica desligada na **Entrada Oficina**, na **Entrega** e na **Montagem**, onde o
+serviço já existe — exigir o número é o que garante que o registo fica ligado
+ao processo.
 
 Com a marca ligada, o rótulo passa a "Número do serviço (opcional)" e aparece o
 campo **Nome do cliente** — que fica obrigatório se o número ficar vazio. Um
