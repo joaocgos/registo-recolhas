@@ -371,6 +371,23 @@
 
   <main>
 
+    <!-- Seletores: o que se escolhe antes de tudo o resto ------------------->
+    <section class="card">
+      <div class="card-head"><h2>Momento</h2></div>
+      <p class="card-hint">Em que ponto do trabalho estás.</p>
+      <div class="segmented" id="momentos" role="group" aria-label="Momento"></div>
+      <p class="err" id="mom-err">Escolhe o momento.</p>
+    </section>
+
+    <section class="card">
+      <div class="card-head"><h2>Tipo de serviço</h2></div>
+      <p class="card-hint">O enquadramento do trabalho.</p>
+      <div class="segmented" id="servicos" role="group" aria-label="Tipo de serviço"></div>
+      <p class="err" id="srv-err">Escolhe o tipo de serviço.</p>
+    </section>
+
+    <!-- Só aparece depois de escolhidos os dois acima ------------------------>
+    <div id="resto" hidden>
     <!-- Serviço ------------------------------------------------------------->
     <section class="card">
       <div class="card-head"><h2>Serviço</h2></div>
@@ -389,16 +406,6 @@
                aria-describedby="tec-err">
         <p class="err" id="tec-err">Indica o teu nome.</p>
       </div>
-    </section>
-
-    <!-- Tipo de registo ----------------------------------------------------->
-    <section class="card">
-      <div class="card-head"><h2>Tipo de registo</h2></div>
-      <p class="card-hint">O que estás a fotografar.</p>
-
-      <!-- Os botões são gerados a partir da lista TIPOS, no script. -->
-      <div class="segmented" id="tipos" role="group" aria-label="Tipo de registo"></div>
-      <p class="err" id="mom-err">Escolhe o tipo de registo.</p>
     </section>
 
     <!-- Etiqueta ------------------------------------------------------------>
@@ -476,6 +483,8 @@
       <textarea id="obs" maxlength="600"
                 placeholder="Ex.: risco na porta já existente antes da recolha."></textarea>
     </section>
+
+    </div>
 
   </main>
 
@@ -563,15 +572,20 @@ const CONFIG = {
 
 const EMAIL_DESTINO = CONFIG.EMAIL_CAIXA + String.fromCharCode(64) + CONFIG.EMAIL_DOMINIO;
 
-// Tipos de registo. Para acrescentar, remover ou reordenar um tipo, mexe-se
-// SÓ aqui: os botões, o assunto do email, o corpo e os nomes dos ficheiros são
-// todos gerados a partir desta lista.
+// As duas escolhas que o técnico faz antes de tudo o resto.
 //
-//   chave    → entra no nome do ficheiro (26000123_entrega_01.jpg)
-//   marca    → prefixo do assunto ([ENTREGA] Serviço 26000123); sem acentos,
-//              para não haver problemas em clientes de email antigos
-//   texto    → como aparece no corpo do email
-const TIPOS = [
+// MOMENTOS = em que ponto do trabalho a fotografia é tirada.
+// SERVICOS = o enquadramento comercial do trabalho.
+//
+// São independentes: uma recolha pode ser em garantia ou fora dela. Para
+// acrescentar, remover ou reordenar, mexe-se só nestas duas listas — os botões,
+// o assunto do email, o corpo e os nomes dos ficheiros são gerados a partir
+// delas.
+//
+//   chave   → entra no nome do ficheiro
+//   marca   → entra no assunto, sem acentos
+//   detalhe → segunda linha do botão (pode ficar vazia)
+const MOMENTOS = [
   { chave: "recolha", nome: "Recolha", detalhe: "em casa do cliente",
     marca: "RECOLHA", texto: "Recolha em casa do cliente",
     icone: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>' },
@@ -584,21 +598,41 @@ const TIPOS = [
     marca: "ENTREGA", texto: "Entrega ao cliente",
     icone: '<path d="M21 8v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8"/><rect x="2.5" y="3.5" width="19" height="4.5" rx="1"/><path d="M10 12.5h4"/>' },
 
-  { chave: "reparacao", nome: "Reparação", detalhe: "trabalho efetuado",
-    marca: "REPARACAO", texto: "Reparação efetuada",
-    icone: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2 7.3 7.3M16.7 16.7l2.1 2.1M18.8 5.2 16.7 7.3M7.3 16.7l-2.1 2.1"/>' },
+  { chave: "montagem", nome: "Montagem", detalhe: "",
+    marca: "MONTAGEM", texto: "Montagem",
+    icone: '<path d="M12 2.5 4 7v10l8 4.5 8-4.5V7z"/><path d="m4 7 8 4.5L20 7"/><path d="M12 11.5v10"/>' },
 
-  { chave: "orcamento", nome: "Orçamento", detalhe: "avaliação do equipamento",
-    marca: "ORCAMENTO", texto: "Orçamento do equipamento",
+  { chave: "orcamento", nome: "Orçamento", detalhe: "fotos para orçamentar",
+    marca: "ORCAMENTO", texto: "Fotografias para orçamento",
     icone: '<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>' },
 ];
 
-const TIPO_POR_CHAVE = Object.fromEntries(TIPOS.map((t) => [t.chave, t]));
+const SERVICOS = [
+  { chave: "garantia", nome: "Em Garantia", detalhe: "",
+    marca: "GARANTIA", texto: "Em garantia",
+    icone: '<path d="M12 2.5 4.5 5.5v6c0 4.4 3.2 8.4 7.5 9.9 4.3-1.5 7.5-5.5 7.5-9.9v-6z"/><path d="m9 12 2 2 4-4"/>' },
+
+  { chave: "fora_garantia", nome: "Fora de Garantia", detalhe: "",
+    marca: "FORA GARANTIA", texto: "Fora de garantia",
+    icone: '<path d="M12 2.5 4.5 5.5v6c0 4.4 3.2 8.4 7.5 9.9 4.3-1.5 7.5-5.5 7.5-9.9v-6z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/>' },
+
+  { chave: "hotelaria", nome: "Hotelaria", detalhe: "",
+    marca: "HOTELARIA", texto: "Hotelaria",
+    icone: '<path d="M3 21h18"/><path d="M5 21V6l7-3.5L19 6v15"/><path d="M9.5 10h1.5M13 10h1.5M9.5 14h1.5M13 14h1.5"/>' },
+
+  { chave: "ar_condicionado", nome: "Ar Condicionado", detalhe: "",
+    marca: "AR CONDICIONADO", texto: "Ar condicionado",
+    icone: '<rect x="2.5" y="4.5" width="19" height="8" rx="1.8"/><path d="M6 9h12"/><path d="M7 16.5c1.2 0 1.2 2 2.4 2M12 16.5c1.2 0 1.2 2 2.4 2"/>' },
+];
+
+const POR_CHAVE = (lista) => Object.fromEntries(lista.map((t) => [t.chave, t]));
+const MOMENTO_POR_CHAVE = POR_CHAVE(MOMENTOS);
+const SERVICO_POR_CHAVE = POR_CHAVE(SERVICOS);
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Estado
    ═══════════════════════════════════════════════════════════════════════════ */
-const estado = { tipo: null, etiquetas: [], fotos: [] };
+const estado = { momento: null, servico: null, etiquetas: [], fotos: [] };
 let seqId = 0;
 let concluidoOk = false;   // só true quando houve confirmação real de envio
 
@@ -886,37 +920,48 @@ function desenhar() {
 const prontas = () => [...estado.etiquetas, ...estado.fotos]
   .filter((f) => f && f.estado === "pronta");
 
-// Constrói os botões dos tipos a partir da lista TIPOS.
-function desenharTipos() {
-  const caixa = $("tipos");
+// Constrói os botões de uma das listas. `campo` é a propriedade do estado que
+// a escolha preenche ("momento" ou "servico").
+function desenharSeletor(caixaId, lista, campo, erroId) {
+  const caixa = $(caixaId);
   caixa.textContent = "";
 
-  TIPOS.forEach((t) => {
+  lista.forEach((t) => {
     const botao = document.createElement("button");
     botao.type = "button";
     botao.className = "seg";
-    botao.dataset.tipo = t.chave;
+    botao.dataset.chave = t.chave;
     botao.setAttribute("aria-pressed", "false");
-    // t.icone vem da constante TIPOS, não de nada escrito pelo utilizador.
+    // t.icone vem das constantes acima, não de nada escrito pelo utilizador.
     botao.innerHTML =
       '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" ' +
       'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
       t.icone + "</svg>" +
       '<span><span class="seg-t"></span><span class="seg-s"></span></span>';
     botao.querySelector(".seg-t").textContent = t.nome;
-    botao.querySelector(".seg-s").textContent = t.detalhe;
+
+    const sub = botao.querySelector(".seg-s");
+    if (t.detalhe) sub.textContent = t.detalhe;
+    else sub.remove();
 
     botao.addEventListener("click", () => {
-      estado.tipo = t.chave;
+      estado[campo] = t.chave;
       caixa.querySelectorAll(".seg").forEach((o) => {
         o.setAttribute("aria-pressed", String(o === botao));
       });
-      marcar(null, "mom-err", false);
+      marcar(null, erroId, false);
+      actualizarVisibilidade();
       actualizarCartaoEtiqueta();
     });
 
     caixa.appendChild(botao);
   });
+}
+
+// O resto do formulário só faz sentido depois de se saber o que se está a
+// registar — e assim deixa de ser possível preencher tudo e esquecer a escolha.
+function actualizarVisibilidade() {
+  $("resto").hidden = !(estado.momento && estado.servico);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -945,20 +990,23 @@ function validar() {
 
   const numMal = !/^\d+$/.test(num);
   const tecMal = tec.length < 2;
-  const momMal = !estado.tipo;
+  const momMal = !estado.momento;
+  const srvMal = !estado.servico;
   const fotMal = prontas().length === 0;
 
   marcar("num", "num-err", numMal);
   marcar("tec", "tec-err", tecMal);
   marcar(null, "mom-err", momMal);
+  marcar(null, "srv-err", srvMal);
   marcar(null, "fot-err", fotMal);
 
-  const primeiro = numMal ? "num" : tecMal ? "tec" : momMal ? "tipos" : null;
+  const primeiro = momMal ? "momentos" : srvMal ? "servicos"
+                 : numMal ? "num" : tecMal ? "tec" : null;
   if (primeiro) {
     $(primeiro).scrollIntoView({ behavior: "smooth", block: "center" });
-    if (!momMal) $(primeiro).focus({ preventScroll: true });
+    if (primeiro === "num" || primeiro === "tec") $(primeiro).focus({ preventScroll: true });
   }
-  return !(numMal || tecMal || momMal || fotMal);
+  return !(numMal || tecMal || momMal || srvMal || fotMal);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -973,9 +1021,9 @@ const dataHora = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}/` 
 const dataCurta = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}, ` +
   `às ${doisDig(d.getHours())}:${doisDig(d.getMinutes())}`;
 
-function construirFicheiros(num, tipo) {
+function construirFicheiros(num, momento, servico) {
   const ficheiros = [];
-  const nome = (sufixo) => `${num}_${tipo}_${sufixo}.jpg`;
+  const nome = (sufixo) => `${num}_${momento}_${servico}_${sufixo}.jpg`;
 
   const juntar = (itens, prefixo) => {
     itens.filter((f) => f.estado === "pronta").forEach((f, i) => {
@@ -988,7 +1036,7 @@ function construirFicheiros(num, tipo) {
   return ficheiros;
 }
 
-function construirCorpo(num, tipo) {
+function construirCorpo(num, momento, servico) {
   const todas = prontas();
   const bytes = todas.reduce((s, f) => s + f.bytes, 0);
   const obs = $("obs").value.trim();
@@ -997,7 +1045,8 @@ function construirCorpo(num, tipo) {
     "Registo fotográfico — CATE",
     "",
     `Serviço: ${num}`,
-    `Tipo de registo: ${TIPO_POR_CHAVE[tipo].texto}`,
+    `Momento: ${MOMENTO_POR_CHAVE[momento].texto}`,
+    `Tipo de serviço: ${SERVICO_POR_CHAVE[servico].texto}`,
     `Técnico: ${$("tec").value.trim()}`,
     `Enviado: ${dataHora(new Date())}`,
     `Fotografias: ${todas.length} (${kb(bytes)})`,
@@ -1038,18 +1087,20 @@ async function enviar() {
   if (!validar()) return;
 
   const num = $("num").value.trim();
-  const tipo = estado.tipo;
-  const ficheiros = construirFicheiros(num, tipo);
-  const assunto = `[${TIPO_POR_CHAVE[tipo].marca}] Serviço ${num}`;
-  const corpo = construirCorpo(num, tipo);
+  const momento = estado.momento;
+  const servico = estado.servico;
+  const ficheiros = construirFicheiros(num, momento, servico);
+  const assunto = `[${MOMENTO_POR_CHAVE[momento].marca} · ` +
+                  `${SERVICO_POR_CHAVE[servico].marca}] Serviço ${num}`;
+  const corpo = construirCorpo(num, momento, servico);
 
   const temEtiquetas = estado.etiquetas.some((f) => f.estado === "pronta");
 
   $("send").disabled = true;
   try {
     if (CONFIG.ENDPOINT) {
-      await enviarPorEndpoint(ficheiros, assunto, corpo, num, tipo);
-      if (temEtiquetas) marcarEtiquetaEnviada(num, tipo);
+      await enviarPorEndpoint(ficheiros, assunto, corpo, num, momento, servico);
+      if (temEtiquetas) marcarEtiquetaEnviada(num, momento);
       concluir("ok", "Registo enviado",
                "O registo chegou a " + EMAIL_DESTINO + ".");
       return;
@@ -1057,7 +1108,7 @@ async function enviar() {
 
     if (navigator.canShare && navigator.canShare({ files: ficheiros })) {
       await navigator.share({ files: ficheiros, title: assunto, text: corpo });
-      if (temEtiquetas) marcarEtiquetaEnviada(num, tipo);
+      if (temEtiquetas) marcarEtiquetaEnviada(num, momento);
       concluir("aviso", "Falta enviar o email",
                "A partilha só entregou as fotografias à app de email. " +
                "Abre-a e carrega em enviar — só aí o registo chega a " +
@@ -1075,13 +1126,14 @@ async function enviar() {
   }
 }
 
-async function enviarPorEndpoint(ficheiros, assunto, corpo, num, tipo) {
+async function enviarPorEndpoint(ficheiros, assunto, corpo, num, momento, servico) {
   const dados = new FormData();
   dados.append("para", EMAIL_DESTINO);
   dados.append("assunto", assunto);
   dados.append("corpo", corpo);
   dados.append("servico", num);
-  dados.append("tipo", tipo);
+  dados.append("momento", momento);
+  dados.append("servico", servico);
   ficheiros.forEach((f) => dados.append("fotos", f, f.name));
 
   const resposta = await fetch(CONFIG.ENDPOINT, { method: "POST", body: dados });
@@ -1141,7 +1193,7 @@ function recomeçar() {
   estado.fotos = [];
   $("obs").value = "";
   $("num").value = "";
-  ["num-err", "tec-err", "mom-err", "fot-err"].forEach((id) => marcar(null, id, false));
+  ["num-err", "tec-err", "mom-err", "srv-err", "fot-err"].forEach((id) => marcar(null, id, false));
   $("num").classList.remove("invalid");
   $("done").classList.remove("show");
   concluidoOk = false;
@@ -1199,9 +1251,9 @@ function etiquetasEnviadas() {
   try { return JSON.parse(memoria.ler("cate_etiquetas") || "{}"); } catch (_) { return {}; }
 }
 
-function marcarEtiquetaEnviada(num, tipo) {
+function marcarEtiquetaEnviada(num, momento) {
   const registo = etiquetasEnviadas();
-  registo[num] = { quando: new Date().toISOString(), tipo };
+  registo[num] = { quando: new Date().toISOString(), tipo: momento };
 
   // Limpeza: fora as entradas com mais de meio ano, para não crescer sem fim.
   const limite = Date.now() - DIAS_MEMORIA * 86400000;
@@ -1221,7 +1273,7 @@ function etiquetaJaEnviada(num) {
   const quando = e.quando || e;          // tolera o formato antigo (só a data)
   const d = new Date(quando);
   if (isNaN(d.getTime())) return null;
-  const t = TIPO_POR_CHAVE[e.tipo];
+  const t = MOMENTO_POR_CHAVE[e.tipo];
   return { data: d, tipoNome: t ? t.nome : "outro" };
 }
 
@@ -1231,7 +1283,9 @@ $("tec").addEventListener("input", (e) => {
   if (e.target.value.trim().length >= 2) marcar("tec", "tec-err", false);
 });
 
-desenharTipos();
+desenharSeletor("momentos", MOMENTOS, "momento", "mom-err");
+desenharSeletor("servicos", SERVICOS, "servico", "srv-err");
+actualizarVisibilidade();
 
 const ligarEntrada = (botaoId, entradaId, alvo) => {
   $(botaoId).addEventListener("click", () => $(entradaId).click());

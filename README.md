@@ -1,8 +1,9 @@
 # CATE · Registo Fotográfico
 
 Página para os técnicos dos serviços de rua enviarem fotografias dos
-equipamentos ao longo de um serviço — recolha, oficina, entrega, reparação
-ou orçamento.
+equipamentos ao longo de um serviço. Cada registo é classificado por **momento**
+(recolha, oficina, entrega, montagem, orçamento) e por **tipo de serviço**
+(em garantia, fora de garantia, hotelaria, ar condicionado).
 
 Funciona sem servidor, sem base de dados e sem login. É só HTML, CSS e
 JavaScript — as fotografias são comprimidas no próprio telemóvel e entregues
@@ -65,11 +66,11 @@ o Android chega a mostrá-lo diretamente no menu de partilha.
 
 ## Como se usa
 
-1. Escrever o número do serviço (só dígitos, sem limite de comprimento) e o
-   nome do técnico
    — o nome fica guardado e não é preciso repetir.
-2. Escolher o **tipo de registo** (Recolha, Oficina, Entrega, Reparação,
-   Orçamento).
+1. Escolher o **momento** e o **tipo de serviço**. São as duas primeiras
+   escolhas e o resto do formulário só aparece depois — assim não é possível
+   preencher tudo e descobrir no fim que faltava classificar o registo.
+2. Escrever o número do serviço e o nome do técnico.
 3. Fotografar as **etiquetas do equipamento** (marca, modelo, número de série).
    Cabem várias, para equipamentos com mais do que uma chapa.
 4. Fotografar o **equipamento** — pela câmara ou escolhendo da galeria.
@@ -134,11 +135,15 @@ const CONFIG = {
 };
 ```
 
-**Tipos de registo** — a lista `TIPOS`, logo a seguir ao `CONFIG`. Para
-acrescentar, remover ou reordenar um tipo mexe-se só aí: os botões, o prefixo do
-assunto, o corpo do email e os nomes dos ficheiros são todos gerados a partir
-dela. Cada entrada precisa de `chave` (vai no nome do ficheiro), `marca`
-(prefixo do assunto, sem acentos), `nome`, `detalhe`, `texto` e `icone`.
+**Momentos e tipos de serviço** — as listas `MOMENTOS` e `SERVICOS`, logo a
+seguir ao `CONFIG`. São independentes uma da outra: uma recolha tanto pode ser
+em garantia como fora dela. Para acrescentar, remover ou reordenar mexe-se só
+aí — os botões, o prefixo do assunto, o corpo do email e os nomes dos ficheiros
+são todos gerados a partir delas.
+
+Cada entrada precisa de `chave` (vai no nome do ficheiro), `marca` (prefixo do
+assunto, sem acentos), `nome`, `texto` (corpo do email), `icone` e, se fizer
+sentido, `detalhe` para a segunda linha do botão — que pode ficar vazia.
 
 **Limite de fotografias** — `MAX_FOTOS`. Está em 12 por ser um valor folgado
 para um registo completo. Se na prática ninguém passar de 5, baixa-se; se
@@ -173,9 +178,11 @@ serviço de email e a uma chave guardada no servidor.
 
 ## Nome dos ficheiros
 
-Os anexos saem como `26000123_entrega_etiqueta_01.jpg` e
-`26000123_entrega_01.jpg` — ou seja, `{serviço}_{tipo}_{n}.jpg`, com as
-etiquetas a levarem `etiqueta_` antes do número.
+Os anexos saem como `26000123_oficina_fora_garantia_etiqueta_01.jpg` e
+`26000123_oficina_fora_garantia_01.jpg` — ou seja,
+`{serviço}_{momento}_{serviço}_{n}.jpg`, com as etiquetas a levarem `etiqueta_`
+antes do número. O assunto acompanha:
+`[OFICINA · FORA GARANTIA] Serviço 26000123`.
 
 O padrão é fixo e previsível de propósito: se algum dia se quiser arquivar esta
 caixa de correio automaticamente, o número do serviço e o tipo lêem-se do
