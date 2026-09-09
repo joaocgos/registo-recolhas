@@ -182,6 +182,8 @@ pelo código. Existem duas marcas:
     numeroOpcional: true
     etiquetaObrigatoria: true
     campoRecebidoPor: true
+    ajudaEtiquetas: "..."
+    ajudaFotos: "..."
 
 Está ligada nos três momentos em que o serviço pode ainda não existir: a
 **Recolha** e a **Reparação no local** (vai-se a casa do cliente e o serviço é
@@ -196,16 +198,25 @@ Com a marca ligada, o rótulo passa a "Número do serviço (opcional)" e aparece
 campo **Nome do cliente** — que fica obrigatório se o número ficar vazio. Um
 registo tem sempre de ser atribuível a alguém: ou pelo serviço, ou pelo cliente.
 
-`etiquetaObrigatoria` está ligada na **Entrada Oficina**: é pela chapa que a
+`etiquetaObrigatoria` está ligada na **Entrada Oficina** e na **Montagem**: é pela chapa que a
 oficina identifica a máquina que acabou de entrar, por isso não se deixa
 partilhar sem ela. O cartão passa a dizer "Etiquetas · obrigatória" e, se
 faltar, a validação aponta o equipamento em causa. Nos outros momentos as
 etiquetas continuam opcionais — há equipamentos sem chapa legível, e obrigar
 criaria um beco sem saída.
 
-`campoRecebidoPor` está ligada na **Entrega**: faz aparecer um campo opcional
+`ajudaEtiquetas` e `ajudaFotos` substituem o texto de ajuda dessas secções. O
+mesmo campo pede coisas diferentes conforme o momento: na Entrada Oficina a
+chapa serve para identificar a máquina que entrou, na Montagem é o que dá acesso
+à garantia do equipamento novo. E num equipamento acabado de instalar não há
+danos anteriores a documentar, por isso a Montagem pede "o equipamento instalado
+e as ligações feitas" em vez de "o estado do equipamento e qualquer dano
+visível". Quando o momento não define nenhum texto, usa-se o genérico.
+
+`campoRecebidoPor` está ligada na **Entrega** e na **Montagem**: faz aparecer um campo opcional
 "Recebido por". Numa entrega, quem recebeu é parte da prova — sem isso o registo
-mostra o estado do equipamento mas não que chegou às mãos de alguém. Fica
+mostra o estado do equipamento mas não que chegou às mãos de alguém. Uma
+instalação acaba da mesma maneira, com o equipamento entregue a funcionar. Fica
 opcional para não travar a partilha quando não se soube. O valor só entra no
 email nos momentos onde o campo existe.
 

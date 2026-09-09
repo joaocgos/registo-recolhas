@@ -635,6 +635,8 @@ const MOMENTOS = [
     marca: "OFICINA", texto: "Entrada em oficina",
     // É pela chapa que a oficina identifica a máquina que acabou de entrar.
     etiquetaObrigatoria: true,
+    ajudaEtiquetas: "A chapa com a marca, o modelo e o número de série. É por " +
+                    "ela que a oficina identifica a máquina, por isso não pode faltar.",
     icone: '<path d="M3 21V9.5l9-6 9 6V21z"/><path d="M7.5 21v-7h9v7"/><path d="M7.5 16.6h9M7.5 18.8h9"/>' },
 
   { chave: "entrega", nome: "Entrega", detalhe: "ao cliente",
@@ -646,6 +648,14 @@ const MOMENTOS = [
 
   { chave: "montagem", nome: "Montagem", detalhe: "instalação de equipamento novo",
     marca: "MONTAGEM", texto: "Montagem de equipamento novo (instalação)",
+    // Num equipamento novo é o número de série que dá acesso à garantia: se não
+    // ficar registado agora, pode ser preciso voltar lá para o ir buscar.
+    etiquetaObrigatoria: true,
+    ajudaEtiquetas: "A chapa com a marca, o modelo e o número de série — " +
+                    "é o que dá acesso à garantia do equipamento novo.",
+    // Num equipamento acabado de instalar não há danos anteriores a documentar.
+    ajudaFotos: "O equipamento instalado e as ligações feitas.",
+    campoRecebidoPor: true,
     icone: '<path d="M12 2.5 4 7v10l8 4.5 8-4.5V7z"/><path d="m4 7 8 4.5L20 7"/><path d="M12 11.5v10"/>' },
 
   { chave: "orcamento", nome: "Orçamento", detalhe: "fotos para orçamentar",
@@ -1111,17 +1121,19 @@ function desenharEquipamentos() {
       cartao.appendChild(nota);
     }
 
+    // Os textos de ajuda podem ser próprios de cada momento; quando o momento
+    // não define nenhum, usa-se o genérico.
+    const m = MOMENTO_POR_CHAVE[estado.momento] || {};
     const obrigatoria = etiquetaObrigatoria();
+
     cartao.appendChild(construirSubseccao(
       eq, "etiquetas", obrigatoria ? "Etiquetas · obrigatória" : "Etiquetas",
-      obrigatoria
-        ? "A chapa com a marca, o modelo e o número de série. É por ela que a oficina identifica a máquina, por isso não pode faltar."
-        : "A chapa com a marca, o modelo e o número de série.",
+      m.ajudaEtiquetas || "A chapa com a marca, o modelo e o número de série.",
       "in-etq-cam", "in-etq-gal"));
 
     cartao.appendChild(construirSubseccao(
       eq, "fotos", "Fotografias",
-      "O estado do equipamento e qualquer dano visível.",
+      m.ajudaFotos || "O estado do equipamento e qualquer dano visível.",
       "in-fot-cam", "in-fot-gal"));
 
     caixa.appendChild(cartao);
