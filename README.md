@@ -1,7 +1,8 @@
-# CATE · Registo de Recolhas
+# CATE · Registo Fotográfico
 
 Página para os técnicos dos serviços de rua enviarem fotografias dos
-equipamentos na **recolha em casa do cliente** e na **entrada em oficina**.
+equipamentos ao longo de um serviço — recolha, oficina, entrega, reparação
+ou orçamento.
 
 Funciona sem servidor, sem base de dados e sem login. É só HTML, CSS e
 JavaScript — as fotografias são comprimidas no próprio telemóvel e entregues
@@ -33,12 +34,12 @@ em `http://` nem a abrir o ficheiro diretamente do telemóvel.
 
 **GitHub Pages** (o que está em uso):
 
-1. Criar o repositório `registo-recolhas` em <https://github.com/new>,
+1. Criar o repositório `registo-fotografico` em <https://github.com/new>,
    **público** (o Pages só é gratuito em repositórios públicos).
 2. `git push -u origin main`
 3. No repositório: *Settings* → *Pages* → *Source: Deploy from a branch* →
    ramo `main`, pasta `/ (root)` → *Save*.
-4. Ao fim de um minuto fica em <https://joaocgos.github.io/registo-recolhas/>.
+4. Ao fim de um minuto fica em <https://joaocgos.github.io/registo-fotografico/>.
 
 Cada `git push` para `main` republica o site automaticamente.
 
@@ -67,8 +68,10 @@ o Android chega a mostrá-lo diretamente no menu de partilha.
 1. Escrever o número do serviço (só dígitos, sem limite de comprimento) e o
    nome do técnico
    — o nome fica guardado e não é preciso repetir.
-2. Escolher o momento: **Recolha** ou **Oficina**.
-3. Fotografar a **etiqueta do equipamento** (marca, modelo, número de série).
+2. Escolher o **tipo de registo** (Recolha, Oficina, Entrega, Reparação,
+   Orçamento).
+3. Fotografar as **etiquetas do equipamento** (marca, modelo, número de série).
+   Cabem várias, para equipamentos com mais do que uma chapa.
 4. Fotografar o **equipamento** — pela câmara ou escolhendo da galeria.
 5. **Partilhar registo** → abre a partilha do telemóvel → escolher o email →
    **carregar em enviar dentro da app de email**.
@@ -90,27 +93,27 @@ escolheu-se a app errada — o ecrã final tem **Partilhar outra vez**, que repe
 tudo com as mesmas fotografias. Estas só desaparecem quando se toca em
 *Já enviei — novo registo*.
 
-### A etiqueta na oficina
+### As etiquetas
 
-A etiqueta nunca é obrigatória. Ao escolher **Oficina**, o cartão passa a estar
-marcado como opcional, e se aquele serviço já tiver levado etiqueta na recolha,
-aparece um aviso a dizer que não é preciso repetir.
+Cabem várias por registo — há equipamentos com mais do que uma chapa, e às
+vezes é preciso repetir uma que saiu tremida. O limite está em 6.
 
-Esse aviso vive no telemóvel de quem enviou a recolha: se for um técnico a
-recolher e outro a dar entrada na oficina, o segundo não o vê. É por isso uma
-sugestão, nunca um impedimento.
+Se o serviço já tiver levado etiquetas noutro registo, aparece um aviso a
+dizer em qual e quando. É só informação: não desaconselha repetir, porque uma
+etiqueta a mais nunca fez mal e uma a menos obriga a voltar ao equipamento.
+Esse aviso vive no telemóvel de quem as enviou, por isso outro técnico não o vê.
 
-Quando um registo segue sem etiqueta, o email leva sempre uma linha a dizer
-porquê — `Etiqueta: enviada no registo de recolha (07/09/2026 14:02).` ou
-`Etiqueta: não incluída neste registo.` — para quem arquiva conseguir
-distinguir uma etiqueta dispensada de uma esquecida.
+Quando um registo segue sem etiquetas, o email leva sempre uma linha a dizer
+porquê — `Etiquetas: nenhuma neste registo — já enviadas no registo de Recolha
+(07/09/2026 14:02).` ou `Etiquetas: nenhuma neste registo.` — para quem arquiva
+distinguir uma omissão deliberada de um esquecimento.
 
 ### Sem rede em casa do cliente
 
 Não é problema. O técnico tira as fotografias com a câmara normal do telemóvel
 e mais tarde, já com rede, envia-as pela galeria. A página lê a data original
 de cada fotografia (EXIF) e é essa que vai no email — fica sempre registada a
-hora da recolha, não a hora do envio.
+hora a que se esteve com o equipamento, não a hora do envio.
 
 ---
 
@@ -123,12 +126,19 @@ Tudo o que se mexe está no bloco `CONFIG`, no início do `<script>` do
 const CONFIG = {
   EMAIL_CAIXA: "recolhas",          // o endereço é montado em tempo de
   EMAIL_DOMINIO: "cate.com.pt",     // execução, ver nota abaixo
-  MAX_FOTOS: 12,      // fotografias do equipamento (a etiqueta conta à parte)
+  MAX_FOTOS: 12,      // fotografias do equipamento
+  MAX_ETIQUETAS: 6,   // etiquetas (contam à parte das fotografias)
   MAX_LADO: 1280,     // píxeis no lado maior
   QUALIDADE: 0.72,    // 0 a 1
   ENDPOINT: null,
 };
 ```
+
+**Tipos de registo** — a lista `TIPOS`, logo a seguir ao `CONFIG`. Para
+acrescentar, remover ou reordenar um tipo mexe-se só aí: os botões, o prefixo do
+assunto, o corpo do email e os nomes dos ficheiros são todos gerados a partir
+dela. Cada entrada precisa de `chave` (vai no nome do ficheiro), `marca`
+(prefixo do assunto, sem acentos), `nome`, `detalhe`, `texto` e `icone`.
 
 **Limite de fotografias** — `MAX_FOTOS`. Está em 12 por ser um valor folgado
 para um registo completo. Se na prática ninguém passar de 5, baixa-se; se
@@ -136,7 +146,7 @@ faltarem, sobe-se. É o único sítio a alterar.
 
 **Tamanho dos ficheiros** — com 1280 px e qualidade 0.72, uma fotografia de
 telemóvel passa de 3–5 MB para cerca de 120–180 KB, e continua a deixar ler o
-número de série de uma etiqueta. Um registo completo (etiqueta + 4 fotos) fica
+número de série de uma etiqueta. Um registo completo (2 etiquetas + 4 fotos) fica
 à volta de 600 KB. Se for preciso mais detalhe, subir `MAX_LADO` para 1600.
 
 ---
@@ -151,7 +161,7 @@ Para eliminar esse passo é preciso um endpoint que receba as fotografias e as
 reencaminhe por email. Basta apontar `CONFIG.ENDPOINT` para o seu URL e o botão
 passa a enviar sozinho — o resto da página já está preparado. O endpoint recebe
 um `multipart/form-data` com os campos `para`, `assunto`, `corpo`, `servico`,
-`momento` e as imagens em `fotos`.
+`tipo` e as imagens em `fotos`.
 
 Nesse modo o ecrã final passa a dizer *Registo enviado*, porque aí a resposta
 do servidor é confirmação a sério.
@@ -163,11 +173,12 @@ serviço de email e a uma chave guardada no servidor.
 
 ## Nome dos ficheiros
 
-Os anexos saem como `26000123_recolha_etiqueta.jpg`, `26000123_recolha_01.jpg`,
-`26000123_oficina_01.jpg` — ou seja, `{serviço}_{momento}_{n}.jpg`.
+Os anexos saem como `26000123_entrega_etiqueta_01.jpg` e
+`26000123_entrega_01.jpg` — ou seja, `{serviço}_{tipo}_{n}.jpg`, com as
+etiquetas a levarem `etiqueta_` antes do número.
 
 O padrão é fixo e previsível de propósito: se algum dia se quiser arquivar esta
-caixa de correio automaticamente, o número do serviço e o momento lêem-se do
+caixa de correio automaticamente, o número do serviço e o tipo lêem-se do
 nome do ficheiro e do assunto, sem depender de nada do lado da página.
 
 ---

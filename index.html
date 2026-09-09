@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CATE · Registo de Recolhas</title>
+<title>CATE · Registo Fotográfico</title>
 <meta name="description" content="Registo fotográfico de equipamentos na recolha e na entrada em oficina.">
 <meta name="robots" content="noindex, nofollow">
 
@@ -30,7 +30,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Recolhas CATE">
+<meta name="apple-mobile-web-app-title" content="Registo CATE">
 
 <style>
   :root {
@@ -172,8 +172,10 @@
   }
   .err.show { display: block; }
 
-  /* ── Seletor de momento ───────────────────────────────────────────────── */
+  /* ── Seletor do tipo de registo ───────────────────────────────────────── */
   .segmented { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  /* Com um número ímpar de tipos, o último ficaria sozinho meia-linha. */
+  .seg:last-child:nth-child(odd) { grid-column: 1 / -1; }
   .seg {
     display: flex; flex-direction: column; align-items: flex-start; gap: 8px;
     min-height: 92px; padding: 14px;
@@ -361,8 +363,8 @@
       <span class="marca" hidden>CATE</span>
       <div class="header-sep"></div>
       <div class="titulo">
-        <h1>Registo de Recolhas</h1>
-        <p>Fotografias dos equipamentos</p>
+        <h1>Registo Fotográfico</h1>
+        <p>Fotografias de serviço</p>
       </div>
     </div>
   </header>
@@ -389,47 +391,23 @@
       </div>
     </section>
 
-    <!-- Momento ------------------------------------------------------------->
+    <!-- Tipo de registo ----------------------------------------------------->
     <section class="card">
-      <div class="card-head"><h2>Momento</h2></div>
-      <p class="card-hint">Onde estás a tirar as fotografias.</p>
+      <div class="card-head"><h2>Tipo de registo</h2></div>
+      <p class="card-hint">O que estás a fotografar.</p>
 
-      <div class="segmented" role="group" aria-label="Momento do registo">
-        <button type="button" class="seg" id="seg-recolha"
-                data-momento="recolha" aria-pressed="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/>
-            <path d="M9.5 21v-6h5v6"/>
-          </svg>
-          <span>
-            <span class="seg-t">Recolha</span>
-            <span class="seg-s">em casa do cliente</span>
-          </span>
-        </button>
-        <button type="button" class="seg" id="seg-oficina"
-                data-momento="oficina" aria-pressed="false">
-          <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
-               stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M14.7 6.3a4 4 0 0 0 5.2 5.2L21 12l-8.5 8.5a2.1 2.1 0 0 1-3-3L18 9"/>
-            <path d="M3 7h6"/><path d="M3 12h4"/><path d="M3 17h4"/>
-          </svg>
-          <span>
-            <span class="seg-t">Oficina</span>
-            <span class="seg-s">entrada do equipamento</span>
-          </span>
-        </button>
-      </div>
-      <p class="err" id="mom-err">Escolhe o momento do registo.</p>
+      <!-- Os botões são gerados a partir da lista TIPOS, no script. -->
+      <div class="segmented" id="tipos" role="group" aria-label="Tipo de registo"></div>
+      <p class="err" id="mom-err">Escolhe o tipo de registo.</p>
     </section>
 
     <!-- Etiqueta ------------------------------------------------------------>
     <section class="card">
       <div class="card-head">
-        <h2 id="etq-titulo">Etiqueta do equipamento</h2>
-        <span class="counter" id="cnt-etq">0 / 1</span>
+        <h2 id="etq-titulo">Etiquetas do equipamento</h2>
+        <span class="counter" id="cnt-etq">0 / 6</span>
       </div>
-      <p class="card-hint" id="etq-hint">A chapa com a marca, o modelo e o número de série.</p>
+      <p class="card-hint" id="etq-hint">A chapa com a marca, o modelo e o número de série. Se o equipamento tiver mais do que uma, junta todas.</p>
 
       <div class="nota" id="etq-nota" hidden>
         <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
@@ -456,7 +434,7 @@
           Galeria
         </button>
       </div>
-      <div class="thumbs single" id="etq-thumbs"></div>
+      <div class="thumbs grid" id="etq-thumbs"></div>
     </section>
 
     <!-- Fotos do equipamento ------------------------------------------------>
@@ -549,7 +527,7 @@
 
 <!-- Entradas de ficheiro (escondidas) -->
 <input class="visually-hidden" type="file" id="in-etq-cam" accept="image/*" capture="environment">
-<input class="visually-hidden" type="file" id="in-etq-gal" accept="image/*">
+<input class="visually-hidden" type="file" id="in-etq-gal" accept="image/*" multiple>
 <input class="visually-hidden" type="file" id="in-fot-cam" accept="image/*" capture="environment">
 <input class="visually-hidden" type="file" id="in-fot-gal" accept="image/*" multiple>
 
@@ -567,9 +545,10 @@ const CONFIG = {
   EMAIL_CAIXA: "recolhas",
   EMAIL_DOMINIO: "cate.com.pt",
 
-  // Número máximo de fotografias do equipamento (a etiqueta conta à parte).
-  // Aumenta ou baixa este número à vontade — é o único sítio a alterar.
+  // Número máximo de fotografias do equipamento (as etiquetas contam à parte).
+  // Aumenta ou baixa estes números à vontade — é o único sítio a alterar.
   MAX_FOTOS: 12,
+  MAX_ETIQUETAS: 6,
 
   // Compressão. 1280 px no lado maior com qualidade 0.72 dá ficheiros de
   // 120-180 KB, que continuam a deixar ler o número de série de uma etiqueta.
@@ -584,15 +563,42 @@ const CONFIG = {
 
 const EMAIL_DESTINO = CONFIG.EMAIL_CAIXA + String.fromCharCode(64) + CONFIG.EMAIL_DOMINIO;
 
-const MOMENTOS = {
-  recolha: { etiqueta: "RECOLHA", texto: "Recolha em casa do cliente" },
-  oficina: { etiqueta: "OFICINA", texto: "Entrada em oficina" },
-};
+// Tipos de registo. Para acrescentar, remover ou reordenar um tipo, mexe-se
+// SÓ aqui: os botões, o assunto do email, o corpo e os nomes dos ficheiros são
+// todos gerados a partir desta lista.
+//
+//   chave    → entra no nome do ficheiro (26000123_entrega_01.jpg)
+//   marca    → prefixo do assunto ([ENTREGA] Serviço 26000123); sem acentos,
+//              para não haver problemas em clientes de email antigos
+//   texto    → como aparece no corpo do email
+const TIPOS = [
+  { chave: "recolha", nome: "Recolha", detalhe: "em casa do cliente",
+    marca: "RECOLHA", texto: "Recolha em casa do cliente",
+    icone: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>' },
+
+  { chave: "oficina", nome: "Oficina", detalhe: "entrada do equipamento",
+    marca: "OFICINA", texto: "Entrada em oficina",
+    icone: '<path d="M14.7 6.3a4 4 0 0 0 5.2 5.2L21 12l-8.5 8.5a2.1 2.1 0 0 1-3-3L18 9"/><path d="M3 7h6"/><path d="M3 12h4"/><path d="M3 17h4"/>' },
+
+  { chave: "entrega", nome: "Entrega", detalhe: "ao cliente",
+    marca: "ENTREGA", texto: "Entrega ao cliente",
+    icone: '<path d="M21 8v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V8"/><rect x="2.5" y="3.5" width="19" height="4.5" rx="1"/><path d="M10 12.5h4"/>' },
+
+  { chave: "reparacao", nome: "Reparação", detalhe: "trabalho efetuado",
+    marca: "REPARACAO", texto: "Reparação efetuada",
+    icone: '<circle cx="12" cy="12" r="3.2"/><path d="M12 2.5v3M12 18.5v3M2.5 12h3M18.5 12h3M5.2 5.2 7.3 7.3M16.7 16.7l2.1 2.1M18.8 5.2 16.7 7.3M7.3 16.7l-2.1 2.1"/>' },
+
+  { chave: "orcamento", nome: "Orçamento", detalhe: "avaliação do equipamento",
+    marca: "ORCAMENTO", texto: "Orçamento do equipamento",
+    icone: '<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>' },
+];
+
+const TIPO_POR_CHAVE = Object.fromEntries(TIPOS.map((t) => [t.chave, t]));
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Estado
    ═══════════════════════════════════════════════════════════════════════════ */
-const estado = { momento: null, etiqueta: null, fotos: [] };
+const estado = { tipo: null, etiquetas: [], fotos: [] };
 let seqId = 0;
 let concluidoOk = false;   // só true quando houve confirmação real de envio
 
@@ -712,6 +718,14 @@ async function comprimir(ficheiro) {
 /* ═══════════════════════════════════════════════════════════════════════════
    Adicionar e remover fotografias
    ═══════════════════════════════════════════════════════════════════════════ */
+// As etiquetas e as fotografias comportam-se da mesma maneira; só mudam o
+// limite e o nome. Isto evita ter dois caminhos quase iguais no código.
+function colecao(alvo) {
+  return alvo === "etiquetas"
+    ? { itens: estado.etiquetas, max: CONFIG.MAX_ETIQUETAS, nome: "etiquetas" }
+    : { itens: estado.fotos, max: CONFIG.MAX_FOTOS, nome: "fotografias" };
+}
+
 function pareceImagem(f) {
   if (!f) return false;
   if (f.type) return f.type.startsWith("image/");
@@ -731,22 +745,20 @@ async function adicionar(ficheiros, alvo) {
     return;
   }
 
-  if (alvo === "fotos") {
-    const espaco = CONFIG.MAX_FOTOS - estado.fotos.length;
-    if (espaco <= 0) {
-      aviso(`Máximo de ${CONFIG.MAX_FOTOS} fotografias do equipamento.`);
-      return;
-    }
-    if (lista.length > espaco) {
-      aviso(`Só cabem mais ${espaco}. As restantes foram ignoradas.`);
-      lista.length = espaco;
-    }
+  const col = colecao(alvo);
+  const espaco = col.max - col.itens.length;
+  if (espaco <= 0) {
+    aviso(`Máximo de ${col.max} ${col.nome}.`);
+    return;
+  }
+  if (lista.length > espaco) {
+    aviso(`Só cabem mais ${espaco}. As restantes foram ignoradas.`);
+    lista.length = espaco;
   }
 
   for (const ficheiro of lista) {
     const item = { id: ++seqId, estado: "a-processar" };
-    if (alvo === "etiqueta") estado.etiqueta = item;
-    else estado.fotos.push(item);
+    colecao(alvo).itens.push(item);
     desenhar();
 
     try {
@@ -769,15 +781,11 @@ async function adicionar(ficheiros, alvo) {
 }
 
 function remover(id, alvo) {
-  if (alvo === "etiqueta") {
-    if (estado.etiqueta && estado.etiqueta.url) URL.revokeObjectURL(estado.etiqueta.url);
-    estado.etiqueta = null;
-  } else {
-    const i = estado.fotos.findIndex((f) => f.id === id);
-    if (i >= 0) {
-      if (estado.fotos[i].url) URL.revokeObjectURL(estado.fotos[i].url);
-      estado.fotos.splice(i, 1);
-    }
+  const itens = colecao(alvo).itens;
+  const i = itens.findIndex((f) => f.id === id);
+  if (i >= 0) {
+    if (itens[i].url) URL.revokeObjectURL(itens[i].url);
+    itens.splice(i, 1);
   }
   desenhar();
 }
@@ -820,27 +828,19 @@ function cartaoFoto(item, alvo) {
   return div;
 }
 
-// A etiqueta interessa sobretudo na recolha. Na oficina passa a estar
-// assinalada como opcional e, se já tiver seguido na recolha deste serviço,
-// o técnico é avisado de que não precisa de a repetir.
+// As etiquetas fazem falta em qualquer tipo de registo, por isso o cartão está
+// sempre visível. Se este serviço já levou etiquetas noutro registo, diz-se —
+// mas sem aconselhar a não repetir: uma etiqueta a mais nunca fez mal a
+// ninguém, e uma a menos obriga a voltar ao equipamento.
 function actualizarCartaoEtiqueta() {
-  const naOficina = estado.momento === "oficina";
   const num = $("num").value.trim();
-  const jaEnviada = naOficina && num ? etiquetaJaEnviada(num) : null;
-
-  $("etq-titulo").textContent = naOficina
-    ? "Etiqueta do equipamento · opcional"
-    : "Etiqueta do equipamento";
-
-  $("etq-hint").textContent = naOficina
-    ? "Só se não tiver sido enviada na recolha."
-    : "A chapa com a marca, o modelo e o número de série.";
-
+  const anterior = num ? etiquetaJaEnviada(num) : null;
   const nota = $("etq-nota");
-  if (jaEnviada && !estado.etiqueta) {
+
+  if (anterior && !estado.etiquetas.length) {
     $("etq-nota-txt").textContent =
-      `Etiqueta já enviada na recolha de ${dataCurta(jaEnviada)}. ` +
-      "Não é preciso repetir — mas podes, se a anterior não tiver ficado boa.";
+      `Este serviço já levou etiquetas num registo de ${anterior.tipoNome}, ` +
+      `a ${dataCurta(anterior.data)}.`;
     nota.hidden = false;
   } else {
     nota.hidden = true;
@@ -850,43 +850,74 @@ function actualizarCartaoEtiqueta() {
 function desenhar() {
   actualizarCartaoEtiqueta();
 
-  const etqBox = $("etq-thumbs");
-  etqBox.textContent = "";
-  if (estado.etiqueta) etqBox.appendChild(cartaoFoto(estado.etiqueta, "etiqueta"));
+  const pintar = (caixaId, itens, alvo) => {
+    const caixa = $(caixaId);
+    caixa.textContent = "";
+    itens.forEach((f) => caixa.appendChild(cartaoFoto(f, alvo)));
+  };
+  pintar("etq-thumbs", estado.etiquetas, "etiquetas");
+  pintar("fot-thumbs", estado.fotos, "fotos");
 
-  const fotBox = $("fot-thumbs");
-  fotBox.textContent = "";
-  estado.fotos.forEach((f) => fotBox.appendChild(cartaoFoto(f, "fotos")));
-
-  $("cnt-etq").textContent = (estado.etiqueta ? 1 : 0) + " / 1";
-  $("cnt-etq").classList.toggle("full", !!estado.etiqueta);
-
-  const cnt = $("cnt-fotos");
-  cnt.textContent = estado.fotos.length + " / " + CONFIG.MAX_FOTOS;
-  cnt.classList.toggle("full", estado.fotos.length >= CONFIG.MAX_FOTOS);
-
-  $("etq-cam").disabled = !!estado.etiqueta;
-  $("etq-gal").disabled = !!estado.etiqueta;
-  const cheio = estado.fotos.length >= CONFIG.MAX_FOTOS;
-  $("fot-cam").disabled = cheio;
-  $("fot-gal").disabled = cheio;
+  const contador = (id, itens, max, camId, galId) => {
+    const el = $(id);
+    el.textContent = itens.length + " / " + max;
+    el.classList.toggle("full", itens.length >= max);
+    const cheio = itens.length >= max;
+    $(camId).disabled = cheio;
+    $(galId).disabled = cheio;
+  };
+  contador("cnt-etq", estado.etiquetas, CONFIG.MAX_ETIQUETAS, "etq-cam", "etq-gal");
+  contador("cnt-fotos", estado.fotos, CONFIG.MAX_FOTOS, "fot-cam", "fot-gal");
 
   const todas = prontas();
-  const bytes = todas.reduce((s, f) => s + f.bytes, 0);
-  $("tot-size").textContent = kb(bytes);
+  $("tot-size").textContent = kb(todas.reduce((s, f) => s + f.bytes, 0));
 
-  const nFotos = estado.fotos.filter((f) => f.estado === "pronta").length;
-  const temEtq = !!(estado.etiqueta && estado.etiqueta.estado === "pronta");
+  const conta = (arr) => arr.filter((f) => f.estado === "pronta").length;
+  const nEtq = conta(estado.etiquetas);
+  const nFot = conta(estado.fotos);
   const partes = [];
-  if (temEtq) partes.push("1 etiqueta");
-  if (nFotos) partes.push(nFotos + (nFotos === 1 ? " foto" : " fotos"));
+  if (nEtq) partes.push(nEtq + (nEtq === 1 ? " etiqueta" : " etiquetas"));
+  if (nFot) partes.push(nFot + (nFot === 1 ? " foto" : " fotos"));
   $("tot-count").textContent = partes.length ? partes.join(" + ") : "Sem fotografias";
 
   $("send").disabled = todas.length === 0;
 }
 
-const prontas = () => [estado.etiqueta, ...estado.fotos]
+const prontas = () => [...estado.etiquetas, ...estado.fotos]
   .filter((f) => f && f.estado === "pronta");
+
+// Constrói os botões dos tipos a partir da lista TIPOS.
+function desenharTipos() {
+  const caixa = $("tipos");
+  caixa.textContent = "";
+
+  TIPOS.forEach((t) => {
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "seg";
+    botao.dataset.tipo = t.chave;
+    botao.setAttribute("aria-pressed", "false");
+    // t.icone vem da constante TIPOS, não de nada escrito pelo utilizador.
+    botao.innerHTML =
+      '<svg viewBox="0 0 24 24" fill="none" stroke-width="1.9" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+      t.icone + "</svg>" +
+      '<span><span class="seg-t"></span><span class="seg-s"></span></span>';
+    botao.querySelector(".seg-t").textContent = t.nome;
+    botao.querySelector(".seg-s").textContent = t.detalhe;
+
+    botao.addEventListener("click", () => {
+      estado.tipo = t.chave;
+      caixa.querySelectorAll(".seg").forEach((o) => {
+        o.setAttribute("aria-pressed", String(o === botao));
+      });
+      marcar(null, "mom-err", false);
+      actualizarCartaoEtiqueta();
+    });
+
+    caixa.appendChild(botao);
+  });
+}
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Avisos
@@ -914,7 +945,7 @@ function validar() {
 
   const numMal = !/^\d+$/.test(num);
   const tecMal = tec.length < 2;
-  const momMal = !estado.momento;
+  const momMal = !estado.tipo;
   const fotMal = prontas().length === 0;
 
   marcar("num", "num-err", numMal);
@@ -922,7 +953,7 @@ function validar() {
   marcar(null, "mom-err", momMal);
   marcar(null, "fot-err", fotMal);
 
-  const primeiro = numMal ? "num" : tecMal ? "tec" : momMal ? "seg-recolha" : null;
+  const primeiro = numMal ? "num" : tecMal ? "tec" : momMal ? "tipos" : null;
   if (primeiro) {
     $(primeiro).scrollIntoView({ behavior: "smooth", block: "center" });
     if (!momMal) $(primeiro).focus({ preventScroll: true });
@@ -942,22 +973,22 @@ const dataHora = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}/` 
 const dataCurta = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}, ` +
   `às ${doisDig(d.getHours())}:${doisDig(d.getMinutes())}`;
 
-function construirFicheiros(num, momento) {
+function construirFicheiros(num, tipo) {
   const ficheiros = [];
-  const nome = (sufixo) => `${num}_${momento}_${sufixo}.jpg`;
+  const nome = (sufixo) => `${num}_${tipo}_${sufixo}.jpg`;
 
-  if (estado.etiqueta && estado.etiqueta.estado === "pronta") {
-    ficheiros.push(new File([estado.etiqueta.blob], nome("etiqueta"), { type: "image/jpeg" }));
-  }
-  estado.fotos.forEach((f, i) => {
-    if (f.estado === "pronta") {
-      ficheiros.push(new File([f.blob], nome(doisDig(i + 1)), { type: "image/jpeg" }));
-    }
-  });
+  const juntar = (itens, prefixo) => {
+    itens.filter((f) => f.estado === "pronta").forEach((f, i) => {
+      ficheiros.push(new File([f.blob], nome(prefixo + doisDig(i + 1)),
+                              { type: "image/jpeg" }));
+    });
+  };
+  juntar(estado.etiquetas, "etiqueta_");
+  juntar(estado.fotos, "");
   return ficheiros;
 }
 
-function construirCorpo(num, momento) {
+function construirCorpo(num, tipo) {
   const todas = prontas();
   const bytes = todas.reduce((s, f) => s + f.bytes, 0);
   const obs = $("obs").value.trim();
@@ -966,7 +997,7 @@ function construirCorpo(num, momento) {
     "Registo fotográfico — CATE",
     "",
     `Serviço: ${num}`,
-    `Momento: ${MOMENTOS[momento].texto}`,
+    `Tipo de registo: ${TIPO_POR_CHAVE[tipo].texto}`,
     `Técnico: ${$("tec").value.trim()}`,
     `Enviado: ${dataHora(new Date())}`,
     `Fotografias: ${todas.length} (${kb(bytes)})`,
@@ -974,17 +1005,20 @@ function construirCorpo(num, momento) {
 
   // Sem esta linha, quem abrir a caixa não distingue uma etiqueta dispensada
   // de uma esquecida — e é essa a única diferença que interessa a quem arquiva.
-  if (!estado.etiqueta || estado.etiqueta.estado !== "pronta") {
-    const anterior = momento === "oficina" ? etiquetaJaEnviada(num) : null;
+  if (!estado.etiquetas.some((f) => f.estado === "pronta")) {
+    const anterior = etiquetaJaEnviada(num);
     linhas.push(anterior
-      ? `Etiqueta: enviada no registo de recolha (${dataHora(anterior)}).`
-      : "Etiqueta: não incluída neste registo.");
+      ? `Etiquetas: nenhuma neste registo — já enviadas no registo de ` +
+        `${anterior.tipoNome} (${dataHora(anterior.data)}).`
+      : "Etiquetas: nenhuma neste registo.");
   }
 
   const capturas = [];
-  if (estado.etiqueta && estado.etiqueta.capturada) {
-    capturas.push(`  · etiqueta — ${dataHora(estado.etiqueta.capturada)}`);
-  }
+  estado.etiquetas.forEach((f, i) => {
+    if (f.capturada) {
+      capturas.push(`  · etiqueta ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
+    }
+  });
   estado.fotos.forEach((f, i) => {
     if (f.capturada) capturas.push(`  · ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
   });
@@ -1004,18 +1038,18 @@ async function enviar() {
   if (!validar()) return;
 
   const num = $("num").value.trim();
-  const momento = estado.momento;
-  const ficheiros = construirFicheiros(num, momento);
-  const assunto = `[${MOMENTOS[momento].etiqueta}] Serviço ${num}`;
-  const corpo = construirCorpo(num, momento);
+  const tipo = estado.tipo;
+  const ficheiros = construirFicheiros(num, tipo);
+  const assunto = `[${TIPO_POR_CHAVE[tipo].marca}] Serviço ${num}`;
+  const corpo = construirCorpo(num, tipo);
 
-  const temEtiqueta = !!(estado.etiqueta && estado.etiqueta.estado === "pronta");
+  const temEtiquetas = estado.etiquetas.some((f) => f.estado === "pronta");
 
   $("send").disabled = true;
   try {
     if (CONFIG.ENDPOINT) {
-      await enviarPorEndpoint(ficheiros, assunto, corpo, num, momento);
-      if (momento === "recolha" && temEtiqueta) marcarEtiquetaEnviada(num);
+      await enviarPorEndpoint(ficheiros, assunto, corpo, num, tipo);
+      if (temEtiquetas) marcarEtiquetaEnviada(num, tipo);
       concluir("ok", "Registo enviado",
                "O registo chegou a " + EMAIL_DESTINO + ".");
       return;
@@ -1023,7 +1057,7 @@ async function enviar() {
 
     if (navigator.canShare && navigator.canShare({ files: ficheiros })) {
       await navigator.share({ files: ficheiros, title: assunto, text: corpo });
-      if (momento === "recolha" && temEtiqueta) marcarEtiquetaEnviada(num);
+      if (temEtiquetas) marcarEtiquetaEnviada(num, tipo);
       concluir("aviso", "Falta enviar o email",
                "A partilha só entregou as fotografias à app de email. " +
                "Abre-a e carrega em enviar — só aí o registo chega a " +
@@ -1041,13 +1075,13 @@ async function enviar() {
   }
 }
 
-async function enviarPorEndpoint(ficheiros, assunto, corpo, num, momento) {
+async function enviarPorEndpoint(ficheiros, assunto, corpo, num, tipo) {
   const dados = new FormData();
   dados.append("para", EMAIL_DESTINO);
   dados.append("assunto", assunto);
   dados.append("corpo", corpo);
   dados.append("servico", num);
-  dados.append("momento", momento);
+  dados.append("tipo", tipo);
   ficheiros.forEach((f) => dados.append("fotos", f, f.name));
 
   const resposta = await fetch(CONFIG.ENDPOINT, { method: "POST", body: dados });
@@ -1100,10 +1134,10 @@ function concluir(tipo, titulo, mensagem) {
 }
 
 function recomeçar() {
-  [estado.etiqueta, ...estado.fotos].forEach((f) => {
+  [...estado.etiquetas, ...estado.fotos].forEach((f) => {
     if (f && f.url) URL.revokeObjectURL(f.url);
   });
-  estado.etiqueta = null;
+  estado.etiquetas = [];
   estado.fotos = [];
   $("obs").value = "";
   $("num").value = "";
@@ -1127,7 +1161,6 @@ $("logo").addEventListener("error", () => {
   $("logo").hidden = true;
   document.querySelector(".marca").hidden = false;
 });
-$("cnt-fotos").textContent = "0 / " + CONFIG.MAX_FOTOS;
 
 // Só dígitos no número do serviço — sem limite de comprimento. Espaços e
 // qualquer outro caracter são descartados à medida que se escreve, o que
@@ -1156,10 +1189,9 @@ const memoria = {
 /* ─────────────────────────────────────────────────────────────────────────
    Registo das etiquetas já enviadas
 
-   Serve só para avisar o técnico de que não precisa de repetir a etiqueta na
-   oficina. Vive no telemóvel de quem enviou a recolha: se for outro técnico a
-   dar entrada na oficina, o aviso não aparece. Por isso é sempre uma
-   sugestão — nunca impede ninguém de enviar a etiqueta outra vez.
+   Serve só para dizer ao técnico que este serviço já levou etiquetas noutro
+   registo. Vive no telemóvel de quem as enviou: se for outro técnico a fazer
+   o registo seguinte, o aviso não aparece. É informação, não um impedimento.
    ───────────────────────────────────────────────────────────────────────── */
 const DIAS_MEMORIA = 180;
 
@@ -1167,23 +1199,30 @@ function etiquetasEnviadas() {
   try { return JSON.parse(memoria.ler("cate_etiquetas") || "{}"); } catch (_) { return {}; }
 }
 
-function marcarEtiquetaEnviada(num) {
+function marcarEtiquetaEnviada(num, tipo) {
   const registo = etiquetasEnviadas();
-  registo[num] = new Date().toISOString();
+  registo[num] = { quando: new Date().toISOString(), tipo };
 
   // Limpeza: fora as entradas com mais de meio ano, para não crescer sem fim.
   const limite = Date.now() - DIAS_MEMORIA * 86400000;
   for (const chave of Object.keys(registo)) {
-    if (new Date(registo[chave]).getTime() < limite) delete registo[chave];
+    const e = registo[chave];
+    // Entradas antigas eram só a data em texto; toleram-se para não perder o
+    // histórico de quem já tinha a app instalada.
+    const quando = e && e.quando ? e.quando : e;
+    if (new Date(quando).getTime() < limite) delete registo[chave];
   }
   memoria.guardar("cate_etiquetas", JSON.stringify(registo));
 }
 
 function etiquetaJaEnviada(num) {
-  const quando = etiquetasEnviadas()[num];
-  if (!quando) return null;
+  const e = etiquetasEnviadas()[num];
+  if (!e) return null;
+  const quando = e.quando || e;          // tolera o formato antigo (só a data)
   const d = new Date(quando);
-  return isNaN(d.getTime()) ? null : d;
+  if (isNaN(d.getTime())) return null;
+  const t = TIPO_POR_CHAVE[e.tipo];
+  return { data: d, tipoNome: t ? t.nome : "outro" };
 }
 
 $("tec").value = memoria.ler("cate_tecnico");
@@ -1192,16 +1231,7 @@ $("tec").addEventListener("input", (e) => {
   if (e.target.value.trim().length >= 2) marcar("tec", "tec-err", false);
 });
 
-document.querySelectorAll(".seg").forEach((botao) => {
-  botao.addEventListener("click", () => {
-    estado.momento = botao.dataset.momento;
-    document.querySelectorAll(".seg").forEach((b) => {
-      b.setAttribute("aria-pressed", String(b === botao));
-    });
-    marcar(null, "mom-err", false);
-    actualizarCartaoEtiqueta();
-  });
-});
+desenharTipos();
 
 const ligarEntrada = (botaoId, entradaId, alvo) => {
   $(botaoId).addEventListener("click", () => $(entradaId).click());
@@ -1215,8 +1245,8 @@ const ligarEntrada = (botaoId, entradaId, alvo) => {
   });
 };
 
-ligarEntrada("etq-cam", "in-etq-cam", "etiqueta");
-ligarEntrada("etq-gal", "in-etq-gal", "etiqueta");
+ligarEntrada("etq-cam", "in-etq-cam", "etiquetas");
+ligarEntrada("etq-gal", "in-etq-gal", "etiquetas");
 ligarEntrada("fot-cam", "in-fot-cam", "fotos");
 ligarEntrada("fot-gal", "in-fot-gal", "fotos");
 
