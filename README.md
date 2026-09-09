@@ -185,6 +185,10 @@ pelo código. Existem duas marcas:
     campoRecebidoPor: true
     ajudaEtiquetas: "..."
     ajudaFotos: "..."
+    semEquipamentos: true
+    clienteSempre: true
+    camposContacto: true
+    campoPretendido: true
 
 Está ligada nos três momentos em que o serviço pode ainda não existir: a
 **Recolha** e a **Reparação no local** (vai-se a casa do cliente e o serviço é
@@ -220,6 +224,24 @@ mostra o estado do equipamento mas não que chegou às mãos de alguém. Uma
 instalação acaba da mesma maneira, com o equipamento entregue a funcionar. Fica
 opcional para não travar a partilha quando não se soube. O valor só entra no
 email nos momentos onde o campo existe.
+
+### O Orçamento é outra coisa
+
+As últimas quatro marcas existem por causa dele. O Orçamento não é um registo de
+equipamento: é um **levantamento do local** para depois se planear a execução.
+Não há máquina para identificar, logo não há blocos de equipamento nem
+etiquetas — `semEquipamentos` troca tudo isso por um cartão único,
+"Fotografias do local".
+
+Em contrapartida, o que quem orçamenta precisa é de saber **de quem** e **onde**,
+e sobretudo **o que lhe estão a pedir**: `clienteSempre` exige o nome mesmo
+havendo número de serviço, `camposContacto` acrescenta morada (obrigatória) e
+contacto (opcional), e `campoPretendido` acrescenta um campo obrigatório
+"O que o cliente pretende". Quem vai pôr um preço nas fotografias não esteve lá;
+sem isto, veria imagens sem saber o que se lhe pede.
+
+Os ficheiros saem sem `eq` e sem `etiqueta`:
+`26000123_orcamento_fora_garantia_01.jpg`.
 
 Sem número, o assunto identifica pelo cliente
 (`[RECOLHA · GARANTIA] Cliente: Maria Fernandes`) e os ficheiros levam um
