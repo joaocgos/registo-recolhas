@@ -359,7 +359,12 @@
 
   <header>
     <div class="header-in">
-      <img src="logo.png" alt="CATE" id="logo">
+      <!-- O lettering do logótipo é cinzento-escuro e desaparecia em fundo
+           escuro. A versão -dark tem as letras claras e mantém o vermelho. -->
+      <picture>
+        <source srcset="logo-dark.png" media="(prefers-color-scheme: dark)">
+        <img src="logo.png" alt="CATE" id="logo">
+      </picture>
       <span class="marca" hidden>CATE</span>
       <div class="header-sep"></div>
       <div class="titulo">
