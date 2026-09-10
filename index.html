@@ -551,6 +551,9 @@
     <!-- Folha de serviço: só quando há serviço associado --------------------->
     <div id="folha"></div>
 
+    <!-- Fatura de compra: só nos registos em garantia ----------------------->
+    <div id="fatura"></div>
+
     <!-- Fotografias do local: nos momentos sem equipamentos ------------------>
     <div id="local"></div>
 
@@ -673,6 +676,10 @@ const CONFIG = {
   // Fotografias do local, nos momentos que são levantamento e não registo de
   // equipamento.
   MAX_LOCAL: 12,
+
+  // Fotografias da fatura de compra, nos registos em garantia (uma fatura
+  // pode ter mais do que uma página).
+  MAX_FATURA: 3,
 
   // Compressão. 1280 px no lado maior com qualidade 0.72 dá ficheiros de
   // 120-180 KB, que continuam a deixar ler o número de série de uma etiqueta.
@@ -820,15 +827,14 @@ const estado = {
   folha: [],
   // Fotografias do local, nos momentos sem equipamentos.
   local: [],
+  // Fatura de compra: a prova da garantia. Só nos registos em garantia.
+  fatura: [],
 };
 
 // Qual o bloco e a secção que pediram o seletor de ficheiros. Há só quatro
 // <input> na página, reaproveitados por todos os equipamentos.
 let pedido = { eq: 0, alvo: "fotos" };
 
-// Se o cartão da folha de serviço está à vista, para só o redesenhar quando a
-// resposta muda — não a cada tecla escrita no número.
-let folhaVisivel = false;
 
 // Passo reaberto com "alterar" (ou null). Tem prioridade sobre o primeiro
 // passo ainda por responder.
@@ -961,20 +967,37 @@ function colecao(eq, alvo) {
   if (alvo === "local") {
     return { itens: estado.local, max: CONFIG.MAX_LOCAL, nome: "fotografias do local" };
   }
+  if (alvo === "fatura") {
+    return { itens: estado.fatura, max: CONFIG.MAX_FATURA, nome: "fotografias da fatura" };
+  }
   const equipamento = estado.equipamentos[eq];
   return alvo === "etiquetas"
     ? { itens: equipamento.etiquetas, max: CONFIG.MAX_ETIQUETAS, nome: "etiquetas" }
     : { itens: equipamento.fotos, max: CONFIG.MAX_FOTOS, nome: "fotografias" };
 }
 
-// Só as que já acabaram de comprimir — as outras ainda não têm blob.
+// Que colecções contam neste momento. Uma escondida — fotografias de
+// equipamento depois de mudar para Orçamento, a fatura depois de passar a
+// "fora de garantia" — não conta nem é enviada: ia no email algo que o técnico
+// já não vê, e com nomes de ficheiro repetidos. todosItens() continua a dar
+// tudo, para a limpeza no registo novo.
+function colecoesAtivas() {
+  const c = [];
+  if (haServico()) c.push(estado.folha);
+  if (emGarantia()) c.push(estado.fatura);
+  if (semEquipamentos()) c.push(estado.local);
+  else estado.equipamentos.forEach((e) => c.push(e.etiquetas, e.fotos));
+  return c;
+}
+
+// Só as que contam e já acabaram de comprimir — as outras ainda não têm blob.
 function prontas() {
-  return todosItens().filter((f) => f && f.estado === "pronta");
+  return colecoesAtivas().flat().filter((f) => f && f.estado === "pronta");
 }
 
 // Todas as fotografias de todos os equipamentos, por ordem.
 function todosItens() {
-  const fora = [...estado.folha, ...estado.local];
+  const fora = [...estado.folha, ...estado.fatura, ...estado.local];
   estado.equipamentos.forEach((e) => fora.push(...e.etiquetas, ...e.fotos));
   return fora;
 }
@@ -1211,6 +1234,57 @@ function desenharFolha() {
 
 // Nos momentos que são levantamento e não registo de equipamento, as
 // fotografias vivem num conjunto único — não há máquina a que as atribuir.
+// A fatura de compra é o que prova que o equipamento está coberto, por isso só
+// aparece nos registos em garantia. Tal como a folha, é do serviço e não de um
+// equipamento.
+function emGarantia() {
+  return precisaGarantia() && estado.garantia === "garantia";
+}
+
+function desenharFatura() {
+  const caixa = $("fatura");
+  caixa.textContent = "";
+  if (!emGarantia()) return;
+
+  const cartao = document.createElement("section");
+  cartao.className = "card";
+
+  const cab = document.createElement("div");
+  cab.className = "card-head";
+  const h2 = document.createElement("h2");
+  h2.textContent = "Fatura · opcional";
+  const cnt = document.createElement("span");
+  cnt.className = "counter" +
+    (estado.fatura.length >= CONFIG.MAX_FATURA ? " full" : "");
+  cnt.textContent = estado.fatura.length + " / " + CONFIG.MAX_FATURA;
+  cab.append(h2, cnt);
+
+  const dica = document.createElement("p");
+  dica.className = "card-hint";
+  dica.textContent = "A fatura de compra do equipamento — é o que prova a " +
+                     "garantia. Se o cliente a tiver no telemóvel, fotografa o ecrã.";
+
+  const pickers = document.createElement("div");
+  pickers.className = "pickers";
+  const cheio = estado.fatura.length >= CONFIG.MAX_FATURA;
+  const abrir = (entrada) => () => {
+    pedido = { eq: 0, alvo: "fatura" };
+    $(entrada).click();
+  };
+  const bCam = botaoSeletor("Câmara", ICONE_CAMARA, abrir("in-etq-cam"));
+  const bGal = botaoSeletor("Galeria", ICONE_GALERIA, abrir("in-etq-gal"));
+  bCam.disabled = cheio;
+  bGal.disabled = cheio;
+  pickers.append(bCam, bGal);
+
+  const thumbs = document.createElement("div");
+  thumbs.className = "thumbs grid";
+  estado.fatura.forEach((f) => thumbs.appendChild(cartaoFoto(f, 0, "fatura")));
+
+  cartao.append(cab, dica, pickers, thumbs);
+  caixa.appendChild(cartao);
+}
+
 function desenharLocal() {
   const caixa = $("local");
   caixa.textContent = "";
@@ -1316,6 +1390,7 @@ function desenharEquipamentos() {
 
 function desenhar() {
   desenharFolha();
+  desenharFatura();
   desenharLocal();
   // Nos momentos sem equipamentos o container fica vazio, senão os blocos
   // continuavam desenhados por baixo de um cartão escondido.
@@ -1341,15 +1416,20 @@ function desenhar() {
 
   const conta = (chave) => estado.equipamentos
     .reduce((t, e) => t + e[chave].filter((f) => f.estado === "pronta").length, 0);
-  const nEtq = conta("etiquetas");
-  const nFot = conta("fotos");
-  const nFol = estado.folha.filter((f) => f.estado === "pronta").length;
-  const nLoc = estado.local.filter((f) => f.estado === "pronta").length;
+  // O rodapé conta o que vai no email, não o que ficou escondido.
+  const semEq = semEquipamentos();
+  const soProntas = (arr) => arr.filter((f) => f.estado === "pronta").length;
+  const nEtq = semEq ? 0 : conta("etiquetas");
+  const nFot = semEq ? 0 : conta("fotos");
+  const nFol = haServico() ? soProntas(estado.folha) : 0;
+  const nFat = emGarantia() ? soProntas(estado.fatura) : 0;
+  const nLoc = semEq ? soProntas(estado.local) : 0;
   const partes = [];
   if (nLoc) partes.push(nLoc + (nLoc === 1 ? " foto do local" : " fotos do local"));
   if (nEtq) partes.push(nEtq + (nEtq === 1 ? " etiqueta" : " etiquetas"));
   if (nFot) partes.push(nFot + (nFot === 1 ? " foto" : " fotos"));
   if (nFol) partes.push(nFol + (nFol === 1 ? " folha" : " folhas"));
+  if (nFat) partes.push(nFat + (nFat === 1 ? " fatura" : " faturas"));
   $("tot-count").textContent = partes.length ? partes.join(" + ") : "Sem fotografias";
 
   $("send").disabled = todas.length === 0;
@@ -1607,22 +1687,37 @@ function construirFicheiros(num, momento, servico, garantia = null) {
   const tipoCurto = (SERVICO_POR_CHAVE[servico] || {}).curta || servico;
   const garCurta = garantia ? ((GARANTIA_POR_CHAVE[garantia] || {}).curta || garantia) : "";
   const base = `${inicio}${momento}_${tipoCurto}_${garCurta ? garCurta + "_" : ""}`;
+
+  // Só vão as colecções que o técnico está a ver — ver colecoesAtivas().
+  const semEq = !!(MOMENTO_POR_CHAVE[momento] || {}).semEquipamentos;
   const nome = (eq, sufixo) =>
     `${base}${varios ? "eq" + (eq + 1) + "_" : ""}${sufixo}.jpg`;
 
   // A folha é do serviço, não de um equipamento: nunca leva o prefixo "eq".
-  estado.folha.filter((f) => f.estado === "pronta").forEach((f, i) => {
-    ficheiros.push(new File([f.blob], `${base}folha_${doisDig(i + 1)}.jpg`,
-                            { type: "image/jpeg" }));
-  });
+  if (num) {
+    estado.folha.filter((f) => f.estado === "pronta").forEach((f, i) => {
+      ficheiros.push(new File([f.blob], `${base}folha_${doisDig(i + 1)}.jpg`,
+                              { type: "image/jpeg" }));
+    });
+  }
+
+  // A fatura também é do serviço: sem prefixo "eq".
+  if (garantia === "garantia") {
+    estado.fatura.filter((f) => f.estado === "pronta").forEach((f, i) => {
+      ficheiros.push(new File([f.blob], `${base}fatura_${doisDig(i + 1)}.jpg`,
+                              { type: "image/jpeg" }));
+    });
+  }
 
   // Fotografias do local: também não pertencem a equipamento nenhum.
-  estado.local.filter((f) => f.estado === "pronta").forEach((f, i) => {
-    ficheiros.push(new File([f.blob], `${base}${doisDig(i + 1)}.jpg`,
-                            { type: "image/jpeg" }));
-  });
+  if (semEq) {
+    estado.local.filter((f) => f.estado === "pronta").forEach((f, i) => {
+      ficheiros.push(new File([f.blob], `${base}${doisDig(i + 1)}.jpg`,
+                              { type: "image/jpeg" }));
+    });
+  }
 
-  estado.equipamentos.forEach((equipamento, eq) => {
+  (semEq ? [] : estado.equipamentos).forEach((equipamento, eq) => {
     const juntar = (itens, prefixo) => {
       itens.filter((f) => f.estado === "pronta").forEach((f, i) => {
         ficheiros.push(new File([f.blob], nome(eq, prefixo + doisDig(i + 1)),
@@ -1639,7 +1734,9 @@ function construirCorpo(num, momento, servico, garantia = null) {
   const cliente = $("cliente").value.trim();
   // Só conta onde o campo existe — senão um valor antigo viajava para um
   // momento que nem o mostra.
-  const nFolha = estado.folha.filter((f) => f.estado === "pronta").length;
+  const nFolha = num ? estado.folha.filter((f) => f.estado === "pronta").length : 0;
+  const nFatura = garantia === "garantia"
+    ? estado.fatura.filter((f) => f.estado === "pronta").length : 0;
   const mom = MOMENTO_POR_CHAVE[momento] || {};
   const recebido = mom.campoRecebidoPor ? $("recebido").value.trim() : "";
   const mostrarContacto = !!mom.camposContacto;
@@ -1666,6 +1763,8 @@ function construirCorpo(num, momento, servico, garantia = null) {
     ...(semEquipamentos() ? [] : [`Equipamentos: ${estado.equipamentos.length}`]),
     ...(nFolha ? [`Folha de serviço: ${nFolha} ` +
                   (nFolha === 1 ? "fotografia" : "fotografias")] : []),
+    ...(nFatura ? [`Fatura: ${nFatura} ` +
+                   (nFatura === 1 ? "fotografia" : "fotografias")] : []),
     `Fotografias: ${todas.length} (${kb(bytes)})`,
   ];
 
@@ -1686,18 +1785,23 @@ function construirCorpo(num, momento, servico, garantia = null) {
   const capturas = [];
   const varios = estado.equipamentos.length > 1;
 
-  estado.folha.forEach((f, i) => {
+  (num ? estado.folha : []).forEach((f, i) => {
     if (f.capturada) {
       capturas.push(`  · folha ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
     }
   });
-  estado.local.forEach((f, i) => {
+  (garantia === "garantia" ? estado.fatura : []).forEach((f, i) => {
+    if (f.capturada) {
+      capturas.push(`  · fatura ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
+    }
+  });
+  (mom.semEquipamentos ? estado.local : []).forEach((f, i) => {
     if (f.capturada) {
       capturas.push(`  · ${doisDig(i + 1)} — ${dataHora(f.capturada)}`);
     }
   });
 
-  estado.equipamentos.forEach((equipamento, eq) => {
+  (mom.semEquipamentos ? [] : estado.equipamentos).forEach((equipamento, eq) => {
     const linhas_eq = [];
     equipamento.etiquetas.forEach((f, i) => {
       if (f.capturada) {
@@ -1845,6 +1949,7 @@ function recomeçar() {
   // hotel não quer voltar a contá-las a cada registo.
   estado.equipamentos = estado.equipamentos.map(() => ({ etiquetas: [], fotos: [] }));
   estado.folha = [];
+  estado.fatura = [];
   estado.local = [];
   ["morada", "contacto", "pretendido"].forEach((id) => { $(id).value = ""; });
   $("obs").value = "";
@@ -1888,11 +1993,11 @@ $("num").addEventListener("input", (e) => {
   if (e.target.value) marcar("num", "num-err", false);
   actualizarCampoNumero();
   actualizarCartaoEtiqueta();
-  const agora = haServico();
-  if (agora !== folhaVisivel) {
-    folhaVisivel = agora;
-    desenharFolha();
-  }
+  // Só se redesenha a folha quando o cartão tem de aparecer ou desaparecer —
+  // não a cada tecla, senão as miniaturas piscavam. Compara-se com o que está
+  // de facto no ecrã: uma variável à parte ficava desatualizada depois de um
+  // "Novo registo", e o cartão deixava de aparecer no registo seguinte.
+  if (haServico() !== ($("folha").childElementCount > 0)) desenharFolha();
 });
 
 $("cliente").addEventListener("input", (e) => {

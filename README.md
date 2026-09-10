@@ -109,6 +109,25 @@ leva o prefixo `eq`, mesmo num registo com vários equipamentos.
 
 Sem número de serviço o cartão não aparece — não haveria folha a que se referir.
 
+### Fatura
+
+Nos registos **em garantia** aparece um cartão para fotografar a fatura de
+compra — é o que prova que o equipamento está coberto. É opcional e cabem três
+fotografias. Se o cliente tiver a fatura no telemóvel, fotografa-se o ecrã. Os
+ficheiros saem como `26000123_recolha_dom_gar_fatura_01.jpg`.
+
+Tal como a folha de serviço, é do serviço e não de um equipamento: nunca leva o
+prefixo `eq`. Não aparece em "fora de garantia" nem no Orçamento.
+
+### O que fica escondido não é enviado
+
+Algumas partes do formulário aparecem e desaparecem conforme as escolhas: a
+folha precisa de número de serviço, a fatura precisa de "em garantia", e o
+Orçamento troca os blocos de equipamento pelas fotografias do local. Se uma
+dessas partes tiver fotografias e depois desaparecer — por exemplo, mudar para
+Orçamento depois de fotografar equipamentos — essas fotografias **ficam de fora**
+do email e do total. Só vai o que o técnico está a ver.
+
 ### Vários equipamentos
 
 Um registo pode cobrir mais do que um equipamento — típico em hotelaria, onde
