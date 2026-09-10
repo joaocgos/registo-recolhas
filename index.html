@@ -402,6 +402,24 @@
     overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap;
   }
   :focus-visible { outline: 3px solid var(--red); outline-offset: 2px; }
+
+  /* ── Passos: tipo → momento → garantia ────────────────────────────────── */
+  .card { scroll-margin-top: 80px; }   /* não ficar debaixo do cabeçalho */
+  .card.resumido { padding: 0; }
+  .passo-resumo {
+    display: flex; align-items: center; gap: 12px;
+    width: 100%; min-height: 58px; padding: 14px 18px;
+    background: none; border: none; border-radius: var(--r-lg);
+    font: inherit; color: var(--ink); text-align: left; cursor: pointer;
+  }
+  .passo-resumo:active { background: var(--red-soft); }
+  .passo-rotulo {
+    flex: none; width: 92px;
+    font-size: 11.5px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .06em; color: var(--muted);
+  }
+  .passo-valor { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; }
+  .passo-alterar { flex: none; font-size: 13px; font-weight: 600; color: var(--red); }
 </style>
 </head>
 <body>
@@ -427,22 +445,52 @@
 
   <main>
 
-    <!-- Seletores: o que se escolhe antes de tudo o resto ------------------->
-    <section class="card">
-      <div class="card-head"><h2>Momento</h2></div>
-      <p class="card-hint">Em que ponto do trabalho estás.</p>
-      <div class="segmented" id="momentos" role="group" aria-label="Momento"></div>
-      <p class="err" id="mom-err">Escolhe o momento.</p>
+    <!-- Três passos, por esta ordem: tipo → momento → garantia. Só um está
+         aberto de cada vez; os já escolhidos encolhem para uma linha. -->
+    <section class="card passo" id="passo-servico">
+      <button type="button" class="passo-resumo" hidden>
+        <span class="passo-rotulo">Tipo</span>
+        <span class="passo-valor"></span>
+        <span class="passo-alterar">alterar</span>
+      </button>
+      <div class="passo-aberto">
+        <div class="card-head"><h2>Tipo de serviço</h2></div>
+        <p class="card-hint">A linha de negócio do trabalho.</p>
+        <div class="segmented" id="servicos" role="group" aria-label="Tipo de serviço"></div>
+        <p class="err" id="srv-err">Escolhe o tipo de serviço.</p>
+      </div>
     </section>
 
-    <section class="card">
-      <div class="card-head"><h2>Tipo de serviço</h2></div>
-      <p class="card-hint">O enquadramento do trabalho.</p>
-      <div class="segmented" id="servicos" role="group" aria-label="Tipo de serviço"></div>
-      <p class="err" id="srv-err">Escolhe o tipo de serviço.</p>
+    <section class="card passo" id="passo-momento" hidden>
+      <button type="button" class="passo-resumo" hidden>
+        <span class="passo-rotulo">Momento</span>
+        <span class="passo-valor"></span>
+        <span class="passo-alterar">alterar</span>
+      </button>
+      <div class="passo-aberto">
+        <div class="card-head"><h2>Momento</h2></div>
+        <p class="card-hint">Em que ponto do trabalho estás.</p>
+        <div class="segmented" id="momentos" role="group" aria-label="Momento"></div>
+        <p class="err" id="mom-err">Escolhe o momento.</p>
+      </div>
     </section>
 
-    <!-- Só aparece depois de escolhidos os dois acima ------------------------>
+    <!-- Não aparece nos momentos sem garantia (ex.: Orçamento) -->
+    <section class="card passo" id="passo-garantia" hidden>
+      <button type="button" class="passo-resumo" hidden>
+        <span class="passo-rotulo">Garantia</span>
+        <span class="passo-valor"></span>
+        <span class="passo-alterar">alterar</span>
+      </button>
+      <div class="passo-aberto">
+        <div class="card-head"><h2>Garantia</h2></div>
+        <p class="card-hint">Se o trabalho está coberto pela garantia.</p>
+        <div class="segmented" id="garantias" role="group" aria-label="Garantia"></div>
+        <p class="err" id="gar-err">Indica se está em garantia.</p>
+      </div>
+    </section>
+
+    <!-- Só aparece depois de feitas as escolhas de cima ---------------------->
     <div id="resto" hidden>
     <!-- Serviço ------------------------------------------------------------->
     <section class="card">
@@ -639,10 +687,11 @@ const CONFIG = {
 
 const EMAIL_DESTINO = CONFIG.EMAIL_CAIXA + String.fromCharCode(64) + CONFIG.EMAIL_DOMINIO;
 
-// As duas escolhas que o técnico faz antes de tudo o resto.
+// As três escolhas que o técnico faz antes de tudo o resto.
 //
 // MOMENTOS = em que ponto do trabalho a fotografia é tirada.
-// SERVICOS = o enquadramento comercial do trabalho.
+// SERVICOS  = o tipo de serviço (a linha de negócio).
+// GARANTIAS = se o trabalho está coberto pela garantia.
 //
 // São independentes: uma recolha pode ser em garantia ou fora dela. Para
 // acrescentar, remover ou reordenar, mexe-se só nestas duas listas — os botões,
@@ -704,6 +753,8 @@ const MOMENTOS = [
     marca: "ORCAMENTO", texto: "Levantamento do local para orçamento",
     numeroOpcional: true,
     semEquipamentos: true,
+    // Um levantamento de local não tem estado de garantia.
+    semGarantia: true,
     clienteSempre: true,
     camposContacto: true,
     campoPretendido: true,
@@ -712,27 +763,48 @@ const MOMENTOS = [
     icone: '<path d="M14 3H6a1 1 0 0 0-1 1v16a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V8z"/><path d="M14 3v5h5"/><path d="M9 13h6"/><path d="M9 17h4"/>' },
 ];
 
+// "curta" é o código que vai nos nomes dos ficheiros; o assunto usa a marca
+// por extenso. Os ficheiros são para arquivar, o assunto é lido por pessoas.
 const SERVICOS = [
-  { chave: "garantia", nome: "Em Garantia", detalhe: "",
-    marca: "GARANTIA", texto: "Em garantia",
-    icone: '<path d="M12 2.5 4.5 5.5v6c0 4.4 3.2 8.4 7.5 9.9 4.3-1.5 7.5-5.5 7.5-9.9v-6z"/><path d="m9 12 2 2 4-4"/>' },
+  { chave: "domestico", curta: "dom", nome: "Doméstico", detalhe: "",
+    marca: "DOMESTICO", texto: "Doméstico",
+    icone: '<rect x="4" y="2.5" width="16" height="19" rx="2"/><circle cx="12" cy="13.5" r="4.5"/><path d="M7.5 6h.01M10.5 6h.01"/>' },
 
-  { chave: "fora_garantia", nome: "Fora de Garantia", detalhe: "",
-    marca: "FORA GARANTIA", texto: "Fora de garantia",
-    icone: '<path d="M12 2.5 4.5 5.5v6c0 4.4 3.2 8.4 7.5 9.9 4.3-1.5 7.5-5.5 7.5-9.9v-6z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/>' },
-
-  { chave: "hotelaria", nome: "Hotelaria", detalhe: "",
+  { chave: "hotelaria", curta: "hot", nome: "Hotelaria", detalhe: "",
     marca: "HOTELARIA", texto: "Hotelaria",
     icone: '<path d="M3 21h18"/><path d="M5 21V6l7-3.5L19 6v15"/><path d="M9.5 10h1.5M13 10h1.5M9.5 14h1.5M13 14h1.5"/>' },
 
-  { chave: "ar_condicionado", nome: "Ar Condicionado", detalhe: "",
+  { chave: "ar_condicionado", curta: "ac", nome: "Ar Condicionado", detalhe: "",
     marca: "AR CONDICIONADO", texto: "Ar condicionado",
     icone: '<rect x="2.5" y="4.5" width="19" height="8" rx="1.8"/><path d="M6 9h12"/><path d="M7 16.5c1.2 0 1.2 2 2.4 2M12 16.5c1.2 0 1.2 2 2.4 2"/>' },
+];
+
+// Estado da garantia. Aplica-se aos três tipos, mas não a todos os momentos:
+// um momento com `semGarantia` não mostra este seletor.
+const GARANTIAS = [
+  { chave: "garantia", curta: "gar", nome: "Em Garantia", detalhe: "",
+    marca: "GARANTIA", texto: "Em garantia",
+    icone: '<path d="M12 2.5 4.5 5.5v6c0 4.4 3.2 8.4 7.5 9.9 4.3-1.5 7.5-5.5 7.5-9.9v-6z"/><path d="m9 12 2 2 4-4"/>' },
+
+  { chave: "fora_garantia", curta: "fg", nome: "Fora de Garantia", detalhe: "",
+    marca: "FORA GARANTIA", texto: "Fora de garantia",
+    icone: '<path d="M12 2.5 4.5 5.5v6c0 4.4 3.2 8.4 7.5 9.9 4.3-1.5 7.5-5.5 7.5-9.9v-6z"/><path d="m9.5 9.5 5 5"/><path d="m14.5 9.5-5 5"/>' },
 ];
 
 const POR_CHAVE = (lista) => Object.fromEntries(lista.map((t) => [t.chave, t]));
 const MOMENTO_POR_CHAVE = POR_CHAVE(MOMENTOS);
 const SERVICO_POR_CHAVE = POR_CHAVE(SERVICOS);
+const GARANTIA_POR_CHAVE = POR_CHAVE(GARANTIAS);
+
+// Os três seletores, pela ordem em que se escolhem. O tipo é a escolha mais
+// larga; a garantia vem depois do momento porque depende dele — no Orçamento
+// nem existe.
+const PASSOS = [
+  { campo: "servico",  cartao: "passo-servico",  porChave: SERVICO_POR_CHAVE },
+  { campo: "momento",  cartao: "passo-momento",  porChave: MOMENTO_POR_CHAVE },
+  { campo: "garantia", cartao: "passo-garantia", porChave: GARANTIA_POR_CHAVE,
+    aplica: () => precisaGarantia() },
+];
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Estado
@@ -740,6 +812,7 @@ const SERVICO_POR_CHAVE = POR_CHAVE(SERVICOS);
 const estado = {
   momento: null,
   servico: null,
+  garantia: null,
   // Cada equipamento tem as suas etiquetas e as suas fotografias, para quem
   // recebe o email conseguir dizer que foto pertence a que máquina.
   equipamentos: [{ etiquetas: [], fotos: [] }],
@@ -756,6 +829,10 @@ let pedido = { eq: 0, alvo: "fotos" };
 // Se o cartão da folha de serviço está à vista, para só o redesenhar quando a
 // resposta muda — não a cada tecla escrita no número.
 let folhaVisivel = false;
+
+// Passo reaberto com "alterar" (ou null). Tem prioridade sobre o primeiro
+// passo ainda por responder.
+let editando = null;
 let seqId = 0;
 let concluidoOk = false;   // só true quando houve confirmação real de envio
 
@@ -1279,7 +1356,7 @@ function desenhar() {
 }
 
 // Constrói os botões de uma das listas. `campo` é a propriedade do estado que
-// a escolha preenche ("momento" ou "servico").
+// a escolha preenche ("momento", "servico" ou "garantia").
 function desenharSeletor(caixaId, lista, campo, erroId) {
   const caixa = $(caixaId);
   caixa.textContent = "";
@@ -1308,12 +1385,17 @@ function desenharSeletor(caixaId, lista, campo, erroId) {
         o.setAttribute("aria-pressed", String(o === botao));
       });
       marcar(null, erroId, false);
+      editando = null;
       actualizarVisibilidade();
       actualizarCampoNumero();
       // Redesenhar os blocos: há momentos que mudam o que neles aparece (ex.:
       // a etiqueta passar a obrigatória). Sem isto ficava o rótulo do momento
       // anterior, e o técnico lia uma regra que já não era a dele.
       desenhar();
+      // Levar o técnico ao passo seguinte, ou ao formulário quando acabou.
+      const seguinte = document.querySelector(".passo:not([hidden]):not(.resumido)")
+        || document.querySelector("#resto .card");
+      if (seguinte) seguinte.scrollIntoView({ behavior: "smooth", block: "nearest" });
     });
 
     caixa.appendChild(botao);
@@ -1362,6 +1444,7 @@ const marcaMomento = (nome) => {
 
 const semEquipamentos = () => marcaMomento("semEquipamentos");
 const etiquetaObrigatoria = () => marcaMomento("etiquetaObrigatoria");
+const precisaGarantia = () => !marcaMomento("semGarantia");
 
 // O cliente é exigido quando o momento o pede sempre, ou quando não há número
 // de serviço — o registo tem de ser atribuível a alguém.
@@ -1370,8 +1453,43 @@ function clienteObrigatorio() {
   return !numeroObrigatorio() && !$("num").value.trim();
 }
 
+function passosAplicaveis() {
+  return PASSOS.filter((p) => !p.aplica || p.aplica());
+}
+
+// Os seletores funcionam como passos: só um está aberto de cada vez, os já
+// escolhidos encolhem para uma linha com "alterar", e os seguintes só aparecem
+// quando se lá chega. O formulário fica logo à mão, em vez de dois ecrãs
+// abaixo de onze botões.
 function actualizarVisibilidade() {
-  $("resto").hidden = !(estado.momento && estado.servico);
+  const aplicaveis = passosAplicaveis();
+  const porResponder = aplicaveis.find((p) => !estado[p.campo]);
+  const aberto = aplicaveis.find((p) => p.campo === editando) || porResponder;
+
+  PASSOS.forEach((p) => {
+    const cartao = $(p.cartao);
+    const aplica = aplicaveis.includes(p);
+    const respondido = !!estado[p.campo];
+    const eAberto = p === aberto;
+    const resumido = aplica && respondido && !eAberto;
+
+    // Escondido quando não se aplica a este momento, ou quando ainda não se
+    // chegou lá (sem resposta e não é o passo aberto).
+    cartao.hidden = !aplica || (!respondido && !eAberto);
+    cartao.classList.toggle("resumido", resumido);
+    cartao.querySelector(".passo-aberto").hidden = !eAberto;
+
+    const resumo = cartao.querySelector(".passo-resumo");
+    resumo.hidden = !resumido;
+    if (respondido && p.porChave[estado[p.campo]]) {
+      resumo.querySelector(".passo-valor").textContent =
+        p.porChave[estado[p.campo]].nome;
+    }
+  });
+
+  // O formulário abre quando todos os passos que se aplicam têm resposta.
+  // Reabrir um passo já respondido não o esconde: as fotos ficam onde estavam.
+  $("resto").hidden = !!porResponder;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1405,6 +1523,7 @@ function validar() {
   const tecMal = tec.length < 2;
   const momMal = !estado.momento;
   const srvMal = !estado.servico;
+  const garMal = precisaGarantia() && !estado.garantia;
   const fotMal = prontas().length === 0;
 
   // Com vários equipamentos declarados, um bloco vazio é quase sempre um
@@ -1429,6 +1548,7 @@ function validar() {
   marcar("tec", "tec-err", tecMal);
   marcar(null, "mom-err", momMal);
   marcar(null, "srv-err", srvMal);
+  marcar(null, "gar-err", garMal);
   const erroFotos = $("fot-err");
   const varios = estado.equipamentos.length > 1;
   if (fotMal) {
@@ -1442,7 +1562,7 @@ function validar() {
   }
   erroFotos.classList.toggle("show", fotMal || faltaEq || faltaEtq);
 
-  const primeiro = momMal ? "momentos" : srvMal ? "servicos"
+  const primeiro = srvMal ? "servicos" : momMal ? "momentos" : garMal ? "garantias"
                  : numMal ? "num" : cliMal ? "cliente" : morMal ? "morada"
                  : tecMal ? "tec" : preMal ? "pretendido" : null;
   if (primeiro) {
@@ -1456,7 +1576,7 @@ function validar() {
     $("equipamentos").children[culpado]
       .scrollIntoView({ behavior: "smooth", block: "center" });
   }
-  return !(numMal || cliMal || morMal || preMal || tecMal || momMal || srvMal
+  return !(numMal || cliMal || morMal || preMal || tecMal || momMal || srvMal || garMal
            || fotMal || faltaEq || faltaEtq);
 }
 
@@ -1472,7 +1592,7 @@ const dataHora = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}/` 
 const dataCurta = (d) => `${doisDig(d.getDate())}/${doisDig(d.getMonth() + 1)}, ` +
   `às ${doisDig(d.getHours())}:${doisDig(d.getMinutes())}`;
 
-function construirFicheiros(num, momento, servico) {
+function construirFicheiros(num, momento, servico, garantia = null) {
   const ficheiros = [];
   const varios = estado.equipamentos.length > 1;
   // Com um só equipamento não vale a pena carregar o nome com "eq1".
@@ -1483,7 +1603,10 @@ function construirFicheiros(num, momento, servico) {
   const carimbo = `${d.getFullYear()}${doisDig(d.getMonth() + 1)}${doisDig(d.getDate())}` +
                   `_${doisDig(d.getHours())}${doisDig(d.getMinutes())}`;
   const inicio = num ? `${num}_` : `${carimbo}_`;
-  const base = `${inicio}${momento}_${servico}_`;
+  // O tipo e a garantia entram pelo código curto: é o que pesa no nome.
+  const tipoCurto = (SERVICO_POR_CHAVE[servico] || {}).curta || servico;
+  const garCurta = garantia ? ((GARANTIA_POR_CHAVE[garantia] || {}).curta || garantia) : "";
+  const base = `${inicio}${momento}_${tipoCurto}_${garCurta ? garCurta + "_" : ""}`;
   const nome = (eq, sufixo) =>
     `${base}${varios ? "eq" + (eq + 1) + "_" : ""}${sufixo}.jpg`;
 
@@ -1512,7 +1635,7 @@ function construirFicheiros(num, momento, servico) {
   return ficheiros;
 }
 
-function construirCorpo(num, momento, servico) {
+function construirCorpo(num, momento, servico, garantia = null) {
   const cliente = $("cliente").value.trim();
   // Só conta onde o campo existe — senão um valor antigo viajava para um
   // momento que nem o mostra.
@@ -1536,6 +1659,7 @@ function construirCorpo(num, momento, servico) {
       ? [`Contacto: ${$("contacto").value.trim()}`] : []),
     `Momento: ${MOMENTO_POR_CHAVE[momento].texto}`,
     `Tipo de serviço: ${SERVICO_POR_CHAVE[servico].texto}`,
+    ...(garantia ? [`Garantia: ${GARANTIA_POR_CHAVE[garantia].texto}`] : []),
     `Registado por: ${$("tec").value.trim()}`,
     ...(recebido ? [`Recebido por: ${recebido}`] : []),
     `Enviado: ${dataHora(new Date())}`,
@@ -1608,11 +1732,15 @@ async function enviar() {
   const num = $("num").value.trim();
   const momento = estado.momento;
   const servico = estado.servico;
-  const ficheiros = construirFicheiros(num, momento, servico);
-  const assunto = `[${MOMENTO_POR_CHAVE[momento].marca} · ` +
-                  `${SERVICO_POR_CHAVE[servico].marca}] ` +
+  // Só conta onde se aplica: uma garantia escolhida antes de mudar para
+  // Orçamento não pode viajar para o assunto nem para os ficheiros.
+  const garantia = precisaGarantia() ? estado.garantia : null;
+  const ficheiros = construirFicheiros(num, momento, servico, garantia);
+  const marcas = [MOMENTO_POR_CHAVE[momento].marca, SERVICO_POR_CHAVE[servico].marca];
+  if (garantia) marcas.push(GARANTIA_POR_CHAVE[garantia].marca);
+  const assunto = `[${marcas.join(" · ")}] ` +
                   (num ? `Serviço ${num}` : `Cliente: ${$("cliente").value.trim()}`);
-  const corpo = construirCorpo(num, momento, servico);
+  const corpo = construirCorpo(num, momento, servico, garantia);
 
   const temEtiquetas = estado.equipamentos
     .some((e) => e.etiquetas.some((f) => f.estado === "pronta"));
@@ -1620,7 +1748,7 @@ async function enviar() {
   $("send").disabled = true;
   try {
     if (CONFIG.ENDPOINT) {
-      await enviarPorEndpoint(ficheiros, assunto, corpo, num, momento, servico);
+      await enviarPorEndpoint(ficheiros, assunto, corpo, num, momento, servico, garantia);
       if (num && temEtiquetas) marcarEtiquetaEnviada(num, momento);
       concluir("ok", "Registo enviado",
                "O registo chegou a " + EMAIL_DESTINO + ".");
@@ -1647,14 +1775,17 @@ async function enviar() {
   }
 }
 
-async function enviarPorEndpoint(ficheiros, assunto, corpo, num, momento, servico) {
+async function enviarPorEndpoint(ficheiros, assunto, corpo, num, momento, servico, garantia) {
   const dados = new FormData();
   dados.append("para", EMAIL_DESTINO);
   dados.append("assunto", assunto);
   dados.append("corpo", corpo);
-  dados.append("servico", num);
+  // Cada dado no seu campo. Antes, o número e o tipo iam ambos em "servico",
+  // e um servidor lia um e perdia o outro.
+  dados.append("numero", num);
   dados.append("momento", momento);
-  dados.append("servico", servico);
+  dados.append("tipo", servico);
+  if (garantia) dados.append("garantia", garantia);
   ficheiros.forEach((f) => dados.append("fotos", f, f.name));
 
   const resposta = await fetch(CONFIG.ENDPOINT, { method: "POST", body: dados });
@@ -1721,12 +1852,14 @@ function recomeçar() {
   $("cliente").value = "";
   $("recebido").value = "";
   ["num-err", "cliente-err", "morada-err", "pretendido-err", "tec-err",
-   "mom-err", "srv-err", "fot-err"].forEach((id) => marcar(null, id, false));
+   "mom-err", "srv-err", "gar-err", "fot-err"].forEach((id) => marcar(null, id, false));
   $("num").classList.remove("invalid");
   $("cliente").classList.remove("invalid");
   actualizarCampoNumero();
   $("done").classList.remove("show");
   concluidoOk = false;
+  editando = null;
+  actualizarVisibilidade();
   desenhar();
   window.scrollTo({ top: 0, behavior: "smooth" });
   $("num").focus();
@@ -1825,6 +1958,16 @@ $("tec").addEventListener("input", (e) => {
 
 desenharSeletor("momentos", MOMENTOS, "momento", "mom-err");
 desenharSeletor("servicos", SERVICOS, "servico", "srv-err");
+desenharSeletor("garantias", GARANTIAS, "garantia", "gar-err");
+
+// Tocar na linha de um passo já escolhido volta a abri-lo.
+PASSOS.forEach((p) => {
+  $(p.cartao).querySelector(".passo-resumo").addEventListener("click", () => {
+    editando = p.campo;
+    actualizarVisibilidade();
+    $(p.cartao).scrollIntoView({ behavior: "smooth", block: "nearest" });
+  });
+});
 actualizarVisibilidade();
 
 // Os botões vivem dentro dos blocos gerados; aqui só se liga o <input>, que é

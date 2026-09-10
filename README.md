@@ -1,9 +1,10 @@
 # CATE · Registo Fotográfico
 
-Página para os técnicos dos serviços de rua enviarem fotografias dos
-equipamentos ao longo de um serviço. Cada registo é classificado por **momento**
-(recolha, reparação no local, entrada em oficina, entrega, montagem, orçamento) e por **tipo de serviço**
-(em garantia, fora de garantia, hotelaria, ar condicionado).
+Página para os funcionários da CATE enviarem fotografias ao longo de um
+serviço. Cada registo é classificado por **tipo de serviço** (doméstico,
+hotelaria, ar condicionado), por **momento** (recolha, reparação no local,
+entrada em oficina, entrega, montagem, orçamento) e, onde se aplica, pela
+**garantia**.
 
 Funciona sem servidor, sem base de dados e sem login. É só HTML, CSS e
 JavaScript — as fotografias são comprimidas no próprio telemóvel e entregues
@@ -66,11 +67,12 @@ o Android chega a mostrá-lo diretamente no menu de partilha.
 
 ## Como se usa
 
-   — o nome fica guardado e não é preciso repetir.
-1. Escolher o **momento** e o **tipo de serviço**. São as duas primeiras
-   escolhas e o resto do formulário só aparece depois — assim não é possível
-   preencher tudo e descobrir no fim que faltava classificar o registo.
-2. Escrever o número do serviço e o nome do técnico.
+1. Escolher o **tipo de serviço**, depois o **momento** e, se se aplicar, a
+   **garantia**. As escolhas aparecem uma a uma, e cada uma feita encolhe para
+   uma linha com "alterar". O resto do formulário só aparece no fim — assim não
+   é possível preencher tudo e descobrir que faltava classificar o registo.
+2. Escrever o número do serviço e quem regista — o nome fica guardado no
+   telemóvel e não é preciso repetir.
 3. Fotografar as **etiquetas do equipamento** (marca, modelo, número de série).
    Cabem várias, para equipamentos com mais do que uma chapa.
 4. Fotografar o **equipamento** — pela câmara ou escolhendo da galeria.
@@ -99,7 +101,7 @@ tudo com as mesmas fotografias. Estas só desaparecem quando se toca em
 Quando há um número de serviço preenchido — obrigatório ou não — aparece um
 cartão para fotografar a folha de serviço. É opcional, cabem quatro fotografias
 (frente, verso, páginas seguintes), e os ficheiros saem como
-`26000123_recolha_garantia_folha_01.jpg`.
+`26000123_recolha_dom_gar_folha_01.jpg`.
 
 Ao contrário das etiquetas e das fotografias, a folha pertence ao **serviço** e
 não a um equipamento: por isso tem cartão próprio e o nome do ficheiro nunca
@@ -166,11 +168,12 @@ const CONFIG = {
 };
 ```
 
-**Momentos e tipos de serviço** — as listas `MOMENTOS` e `SERVICOS`, logo a
-seguir ao `CONFIG`. São independentes uma da outra: uma recolha tanto pode ser
-em garantia como fora dela. Para acrescentar, remover ou reordenar mexe-se só
-aí — os botões, o prefixo do assunto, o corpo do email e os nomes dos ficheiros
-são todos gerados a partir delas.
+**Tipos, momentos e garantia** — as listas `SERVICOS`, `MOMENTOS` e `GARANTIAS`,
+logo a seguir ao `CONFIG`. São independentes: uma recolha doméstica tanto pode
+ser em garantia como fora dela. Para acrescentar, remover ou reordenar mexe-se
+só aí — os botões, o prefixo do assunto, o corpo do email e os nomes dos
+ficheiros são todos gerados a partir delas. As entradas de `SERVICOS` e
+`GARANTIAS` levam também `curta`, o código que vai nos nomes dos ficheiros.
 
 Cada entrada precisa de `chave` (vai no nome do ficheiro), `marca` (prefixo do
 assunto, sem acentos), `nome`, `texto` (corpo do email), `icone` e, se fizer
@@ -189,6 +192,7 @@ pelo código. Existem duas marcas:
     clienteSempre: true
     camposContacto: true
     campoPretendido: true
+    semGarantia: true
 
 Está ligada nos três momentos em que o serviço pode ainda não existir: a
 **Recolha** e a **Reparação no local** (vai-se a casa do cliente e o serviço é
@@ -240,12 +244,13 @@ contacto (opcional), e `campoPretendido` acrescenta um campo obrigatório
 "O que o cliente pretende". Quem vai pôr um preço nas fotografias não esteve lá;
 sem isto, veria imagens sem saber o que se lhe pede.
 
-Os ficheiros saem sem `eq` e sem `etiqueta`:
-`26000123_orcamento_fora_garantia_01.jpg`.
+Também não tem garantia (`semGarantia`): um levantamento de local não tem
+estado de garantia, por isso o seletor nem aparece. Os ficheiros saem sem `eq`,
+sem `etiqueta` e sem garantia: `26000123_orcamento_dom_01.jpg`.
 
 Sem número, o assunto identifica pelo cliente
-(`[RECOLHA · GARANTIA] Cliente: Maria Fernandes`) e os ficheiros levam um
-carimbo de data e hora à cabeça (`20260909_2322_recolha_garantia_01.jpg`), para
+(`[RECOLHA · DOMESTICO · GARANTIA] Cliente: Maria Fernandes`) e os ficheiros levam um
+carimbo de data e hora à cabeça (`20260909_2322_recolha_dom_gar_01.jpg`), para
 que dois registos do mesmo tipo no mesmo dia não deem ficheiros com o mesmo
 nome.
 
@@ -269,8 +274,8 @@ consegue saber se a mensagem chegou a sair.
 Para eliminar esse passo é preciso um endpoint que receba as fotografias e as
 reencaminhe por email. Basta apontar `CONFIG.ENDPOINT` para o seu URL e o botão
 passa a enviar sozinho — o resto da página já está preparado. O endpoint recebe
-um `multipart/form-data` com os campos `para`, `assunto`, `corpo`, `servico`,
-`tipo` e as imagens em `fotos`.
+um `multipart/form-data` com os campos `para`, `assunto`, `corpo`, `numero`,
+`momento`, `tipo`, `garantia` (só quando se aplica) e as imagens em `fotos`.
 
 Nesse modo o ecrã final passa a dizer *Registo enviado*, porque aí a resposta
 do servidor é confirmação a sério.
@@ -284,16 +289,19 @@ serviço de email e a uma chave guardada no servidor.
 
 Com um só equipamento:
 
-    26000123_oficina_fora_garantia_etiqueta_01.jpg
-    26000123_oficina_fora_garantia_01.jpg
+    26000123_oficina_dom_fg_etiqueta_01.jpg
+    26000123_oficina_dom_fg_01.jpg
 
 Com vários, entra o número do equipamento — que só aparece quando é preciso,
 para não alongar o nome no caso comum:
 
-    26000123_recolha_hotelaria_eq1_etiqueta_01.jpg
-    26000123_recolha_hotelaria_eq2_01.jpg
+    26000123_recolha_hot_gar_eq1_etiqueta_01.jpg
+    26000123_recolha_hot_gar_eq2_01.jpg
 
-O assunto acompanha: `[OFICINA · FORA GARANTIA] Serviço 26000123`.
+O assunto vai por extenso, porque é lido por pessoas:
+`[OFICINA · DOMESTICO · FORA GARANTIA] Serviço 26000123`. Nos ficheiros, o tipo
+e a garantia entram por códigos curtos — `dom`, `hot`, `ac` e `gar`, `fg` —
+porque é o que mais pesa no comprimento do nome.
 
 O padrão é fixo e previsível de propósito: se algum dia se quiser arquivar esta
 caixa de correio automaticamente, o número do serviço e o tipo lêem-se do
