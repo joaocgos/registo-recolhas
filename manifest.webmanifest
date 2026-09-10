@@ -1,7 +1,7 @@
 {
-  "name": "CATE · Registo Fotográfico",
-  "short_name": "Registo CATE",
-  "description": "Registo fotográfico de equipamentos nos serviços de rua.",
+  "name": "CATEfoto",
+  "short_name": "CATEfoto",
+  "description": "Registo fotográfico de serviços da CATE.",
   "lang": "pt-PT",
   "start_url": "./index.html",
   "scope": "./",

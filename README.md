@@ -1,4 +1,4 @@
-# CATE · Registo Fotográfico
+# CATEfoto
 
 Página para os funcionários da CATE enviarem fotografias ao longo de um
 serviço. Cada registo é classificado por **tipo de serviço** (doméstico,
@@ -36,12 +36,12 @@ em `http://` nem a abrir o ficheiro diretamente do telemóvel.
 
 **GitHub Pages** (o que está em uso):
 
-1. Criar o repositório `registo-fotografico` em <https://github.com/new>,
+1. Criar o repositório `catefoto` em <https://github.com/new>,
    **público** (o Pages só é gratuito em repositórios públicos).
 2. `git push -u origin main`
 3. No repositório: *Settings* → *Pages* → *Source: Deploy from a branch* →
    ramo `main`, pasta `/ (root)` → *Save*.
-4. Ao fim de um minuto fica em <https://joaocgos.github.io/registo-fotografico/>.
+4. Ao fim de um minuto fica em <https://joaocgos.github.io/catefoto/>.
 
 Cada `git push` para `main` republica o site automaticamente.
 
@@ -127,6 +127,10 @@ Orçamento troca os blocos de equipamento pelas fotografias do local. Se uma
 dessas partes tiver fotografias e depois desaparecer — por exemplo, mudar para
 Orçamento depois de fotografar equipamentos — essas fotografias **ficam de fora**
 do email e do total. Só vai o que o técnico está a ver.
+
+Nesse momento aparece um aviso breve — por exemplo, *"As 3 fotografias do
+equipamento ficam guardadas, mas não seguem neste registo."* — para o técnico
+não pensar que as perdeu, nem que vão no email. Se voltar atrás, reaparecem.
 
 ### Vários equipamentos
 

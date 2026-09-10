@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>CATE · Registo Fotográfico</title>
-<meta name="description" content="Registo fotográfico de equipamentos na recolha e na entrada em oficina.">
+<title>CATEfoto</title>
+<meta name="description" content="CATEfoto — registo fotográfico de serviços da CATE.">
 <meta name="robots" content="noindex, nofollow">
 
 <!--
@@ -30,7 +30,7 @@
 <link rel="icon" href="icon-192.png">
 <link rel="apple-touch-icon" href="icon-192.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-title" content="Registo CATE">
+<meta name="apple-mobile-web-app-title" content="CATEfoto">
 
 <style>
   :root {
@@ -437,8 +437,8 @@
       <span class="marca" hidden>CATE</span>
       <div class="header-sep"></div>
       <div class="titulo">
-        <h1>Registo Fotográfico</h1>
-        <p>Fotografias de serviço</p>
+        <h1>CATEfoto</h1>
+        <p>Registo fotográfico de serviço</p>
       </div>
     </div>
   </header>
@@ -976,6 +976,41 @@ function colecao(eq, alvo) {
     : { itens: equipamento.fotos, max: CONFIG.MAX_FOTOS, nome: "fotografias" };
 }
 
+// Fotografias prontas em cada parte do formulário que está à vista. Serve para
+// saber, depois de uma mudança, o que ela acabou de esconder.
+function fotosVisiveisPorParte() {
+  const conta = (arr) => arr.filter((f) => f.estado === "pronta").length;
+  const p = {};
+  if (haServico()) p.folha = conta(estado.folha);
+  if (emGarantia()) p.fatura = conta(estado.fatura);
+  if (semEquipamentos()) p.local = conta(estado.local);
+  else p.equipamentos = estado.equipamentos
+    .reduce((t, e) => t + conta(e.etiquetas) + conta(e.fotos), 0);
+  return p;
+}
+
+const nomeParte = (k) => ({
+  folha: "da folha de serviço",
+  fatura: "da fatura",
+  local: "do local",
+  equipamentos: estado.equipamentos.length > 1 ? "dos equipamentos" : "do equipamento",
+})[k];
+
+// Uma mudança pode esconder fotografias já tiradas (mudar para Orçamento,
+// passar a "fora de garantia", apagar o número). Ficam guardadas e reaparecem
+// se se voltar atrás, mas não seguem — e sem aviso o técnico podia pensar que
+// as perdeu, ou que iam no email.
+function avisarEscondidas(antes) {
+  const depois = fotosVisiveisPorParte();
+  const escondidas = Object.keys(antes).filter((k) => antes[k] > 0 && !(k in depois));
+  if (!escondidas.length) return;
+  const total = escondidas.reduce((t, k) => t + antes[k], 0);
+  const onde = escondidas.map(nomeParte).join(" e ");
+  aviso(total === 1
+    ? `A fotografia ${onde} fica guardada, mas não segue neste registo.`
+    : `As ${total} fotografias ${onde} ficam guardadas, mas não seguem neste registo.`);
+}
+
 // Que colecções contam neste momento. Uma escondida — fotografias de
 // equipamento depois de mudar para Orçamento, a fatura depois de passar a
 // "fora de garantia" — não conta nem é enviada: ia no email algo que o técnico
@@ -1460,6 +1495,7 @@ function desenharSeletor(caixaId, lista, campo, erroId) {
     else sub.remove();
 
     botao.addEventListener("click", () => {
+      const antes = fotosVisiveisPorParte();
       estado[campo] = t.chave;
       caixa.querySelectorAll(".seg").forEach((o) => {
         o.setAttribute("aria-pressed", String(o === botao));
@@ -1476,6 +1512,7 @@ function desenharSeletor(caixaId, lista, campo, erroId) {
       const seguinte = document.querySelector(".passo:not([hidden]):not(.resumido)")
         || document.querySelector("#resto .card");
       if (seguinte) seguinte.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      avisarEscondidas(antes);
     });
 
     caixa.appendChild(botao);
@@ -1746,7 +1783,7 @@ function construirCorpo(num, momento, servico, garantia = null) {
   const obs = $("obs").value.trim();
 
   const linhas = [
-    "Registo fotográfico — CATE",
+    "Registo fotográfico — CATEfoto",
     "",
     num ? `Serviço: ${num}` : "Serviço: ainda sem número atribuído",
     ...(cliente ? [`Cliente: ${cliente}`] : []),
@@ -1997,7 +2034,10 @@ $("num").addEventListener("input", (e) => {
   // não a cada tecla, senão as miniaturas piscavam. Compara-se com o que está
   // de facto no ecrã: uma variável à parte ficava desatualizada depois de um
   // "Novo registo", e o cartão deixava de aparecer no registo seguinte.
+  const antes = $("folha").childElementCount > 0
+    ? { folha: estado.folha.filter((f) => f.estado === "pronta").length } : {};
   if (haServico() !== ($("folha").childElementCount > 0)) desenharFolha();
+  avisarEscondidas(antes);
 });
 
 $("cliente").addEventListener("input", (e) => {
