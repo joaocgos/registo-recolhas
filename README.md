@@ -257,9 +257,11 @@ pelo código. As marcas existentes:
   justamente para *produzir* o serviço. O rótulo diz "(opcional)" e não há
   caixa.
 
-Nos dois últimos aparece o campo **Nome do cliente**, obrigatório sempre que o
-número falte. Um registo tem sempre de ser atribuível a alguém: ou pelo
-serviço, ou pelo cliente. Dispensar o número não dispensa o cliente.
+Sem número, o registo tem de ser atribuível a alguém. Na Recolha e na
+Reparação, o **Nome do cliente** e a **Morada / local** só aparecem depois de se
+marcar a dispensa — e aí são ambos obrigatórios. Com número, o serviço já diz
+de quem é e onde, e os campos ficam escondidos (o que lá estiver escrito não
+segue). No Orçamento o nome do cliente e a morada estão sempre à vista.
 
 `etiquetaObrigatoria` está ligada na **Entrada Oficina** e na **Montagem**: é
 pela chapa que a oficina identifica a máquina que acabou de entrar. O cartão

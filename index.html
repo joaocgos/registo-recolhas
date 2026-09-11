@@ -1749,17 +1749,13 @@ function actualizarCampoNumero() {
   if (!obrigatorio) marcar("num", "num-err", false);
 
   $("campo-recebido").hidden = !marcaMomento("campoRecebidoPor");
-  $("campo-morada").hidden = !marcaMomento("camposContacto");
+  $("campo-morada").hidden = !moradaPedida();
+  if (!moradaPedida()) marcar("morada", "morada-err", false);
   $("campo-contacto").hidden = !marcaMomento("camposContacto");
   $("card-pretendido").hidden = !marcaMomento("campoPretendido");
   $("card-equipamentos").hidden = semEquipamentos();
 
-  // O nome do cliente só aparece onde o número pode faltar. Aí passa a ser a
-  // única forma de saber a quem pertence o registo.
-  // O cliente aparece onde o número pode faltar (opcional ou dispensável) e
-  // onde é sempre pedido. Sem número, é a forma de saber de quem é o registo.
-  $("campo-cliente").hidden = !(marcaMomento("numeroOpcional")
-    || marcaMomento("numeroDispensavel") || marcaMomento("clienteSempre"));
+  $("campo-cliente").hidden = !clientePedido();
   if ($("campo-cliente").hidden) {
     marcar("cliente", "cliente-err", false);
   } else {
@@ -1780,6 +1776,14 @@ const etiquetaObrigatoria = () => marcaMomento("etiquetaObrigatoria");
 const precisaGarantia = () => !marcaMomento("semGarantia");
 // Obrigatória com dispensa, no primeiro contacto e só em garantia.
 const faturaObrigatoria = () => emGarantia() && marcaMomento("faturaObrigatoria");
+
+// Onde o número é dispensável (Recolha, Reparação), o cliente e a morada só
+// aparecem depois de se marcar a dispensa: com número, o serviço já diz de
+// quem é e onde. No Orçamento (número opcional) o cliente está sempre à vista,
+// e a morada vem com os campos de contacto.
+const clientePedido = () => marcaMomento("clienteSempre")
+  || marcaMomento("numeroOpcional") || numeroDispensado();
+const moradaPedida = () => marcaMomento("camposContacto") || numeroDispensado();
 
 // O cliente é exigido quando o momento o pede sempre, ou quando não há número
 // de serviço — o registo tem de ser atribuível a alguém.
@@ -1857,7 +1861,7 @@ function validar() {
     && !estado.fatura.some((f) => f.estado === "pronta")
     && !estado.dispensas.fatura.marcada;
   const cliMal = clienteObrigatorio() && $("cliente").value.trim().length < 2;
-  const morMal = marcaMomento("camposContacto") && $("morada").value.trim().length < 3;
+  const morMal = moradaPedida() && $("morada").value.trim().length < 3;
   const preMal = marcaMomento("campoPretendido") && $("pretendido").value.trim().length < 3;
   const tecMal = tec.length < 2;
   const momMal = !estado.momento;
@@ -1994,7 +1998,10 @@ function construirFicheiros(num, momento, servico, garantia = null) {
 }
 
 function construirCorpo(num, momento, servico, garantia = null) {
-  const cliente = $("cliente").value.trim();
+  // Só segue o que está à vista: um nome escrito antes de tirar a dispensa
+  // não pode viajar num registo que já tem número.
+  const cliente = clientePedido() ? $("cliente").value.trim() : "";
+  const morada = moradaPedida() ? $("morada").value.trim() : "";
   // Só conta onde o campo existe — senão um valor antigo viajava para um
   // momento que nem o mostra.
   const nFolha = num ? estado.folha.filter((f) => f.estado === "pronta").length : 0;
@@ -2013,8 +2020,7 @@ function construirCorpo(num, momento, servico, garantia = null) {
     "",
     num ? `Serviço: ${num}` : "Serviço: ainda sem número atribuído",
     ...(cliente ? [`Cliente: ${cliente}`] : []),
-    ...(mostrarContacto && $("morada").value.trim()
-      ? [`Morada / local: ${$("morada").value.trim()}`] : []),
+    ...(morada ? [`Morada / local: ${morada}`] : []),
     ...(mostrarContacto && $("contacto").value.trim()
       ? [`Contacto: ${$("contacto").value.trim()}`] : []),
     `Momento: ${MOMENTO_POR_CHAVE[momento].texto}`,
