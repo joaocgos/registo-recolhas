@@ -286,8 +286,10 @@ três vezes isto. Os valores são provisórios; ajustar com o uso real.
 
 **Caixas das lojas** — a lista `LOJAS`. A partilha dos telemóveis não deixa a
 app preencher o destinatário, por isso, com lojas configuradas, aparecem as
-caixas de todas lado a lado por cima do botão Partilhar, cada uma com um botão
-de copiar: o técnico copia a da sua loja e cola-a no "Para" do email. Cada
+caixas de todas lado a lado num cartão no fim do formulário, cada uma com um
+botão de copiar: o técnico copia a da sua loja e cola-a no "Para" do email. O
+rodapé fica só com uma linha, "Destino: a caixa da tua loja", que leva até lá —
+com as lojas no rodapé fixo, ocupavam quase um terço do ecrã. Cada
 entrada leva `nome`, `caixa` e `dominio` — o endereço é montado em tempo de
 execução, como o de cima, para não aparecer por extenso no código. Com a lista
 vazia mostra-se o destino único.

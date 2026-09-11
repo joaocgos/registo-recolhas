@@ -422,8 +422,12 @@
   .passo-alterar { flex: none; font-size: 13px; font-weight: 600; color: var(--red); }
 
   /* ── Caixas das lojas, no rodapé ──────────────────────────────────────── */
-  .lojas { margin: 0 0 10px; }
-  .lojas-titulo { margin: 0 0 4px; font-size: 12px; color: var(--muted); }
+  .lojas { margin: 0; }
+  .dest-link {
+    background: none; border: none; padding: 4px 6px;
+    font: inherit; font-size: 12px; font-weight: 600;
+    color: var(--red); cursor: pointer;
+  }
   .loja { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
   .loja + .loja { border-top: 1px solid var(--line); }
   .loja-nome {
@@ -606,6 +610,13 @@
                 placeholder="Ex.: risco na porta já existente antes da recolha."></textarea>
     </section>
 
+    <!-- Caixas das lojas: no fim, que é quando se vai partilhar (CONFIG.LOJAS) -->
+    <section class="card" id="card-lojas" hidden>
+      <div class="card-head"><h2>Enviar para</h2></div>
+      <p class="card-hint">Copia a caixa da tua loja e cola-a no «Para» do email.</p>
+      <div class="lojas" id="lojas"></div>
+    </section>
+
     </div>
 
   </main>
@@ -615,8 +626,6 @@
       <span id="tot-count">Sem fotografias</span>
       <span>Total <strong id="tot-size">0 KB</strong></span>
     </div>
-    <!-- Caixas das lojas, para copiar antes de partilhar (ver CONFIG.LOJAS) -->
-    <div class="lojas" id="lojas" hidden></div>
     <button type="button" class="send" id="send" disabled>
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -630,6 +639,9 @@
       Registo pesado — pode ser recusado pelo email. Divide em dois.
     </p>
     <p class="dest" id="destino-unico">Destino <b id="dest-mail">a carregar…</b></p>
+    <p class="dest" id="destino-lojas" hidden>
+      <button type="button" class="dest-link" id="ir-lojas">Destino: a caixa da tua loja ↓</button>
+    </p>
   </footer>
 
 </div>
@@ -2092,14 +2104,14 @@ async function copiarEndereco(loja) {
 function desenharLojas() {
   const caixa = $("lojas");
   caixa.textContent = "";
-  caixa.hidden = !LOJAS.length;
-  $("destino-unico").hidden = !!LOJAS.length;
-  if (!LOJAS.length) return;
-
-  const titulo = document.createElement("p");
-  titulo.className = "lojas-titulo";
-  titulo.textContent = "Copia a caixa da tua loja e cola-a no «Para»:";
-  caixa.appendChild(titulo);
+  const temLojas = LOJAS.length > 0;
+  // As caixas ficam num cartão no fim do formulário: no rodapé fixo ocupavam
+  // quase um terço do ecrã enquanto se preenchia. O rodapé só leva uma linha
+  // que aponta para lá.
+  $("card-lojas").hidden = !temLojas;
+  $("destino-unico").hidden = temLojas;
+  $("destino-lojas").hidden = !temLojas;
+  if (!temLojas) return;
 
   LOJAS.forEach((l) => {
     const linha = document.createElement("div");
@@ -2121,6 +2133,11 @@ function desenharLojas() {
 }
 
 desenharLojas();
+
+// A linha do rodapé leva ao cartão das lojas.
+$("ir-lojas").addEventListener("click", () => {
+  $("card-lojas").scrollIntoView({ behavior: "smooth", block: "center" });
+});
 
 // Se o logótipo faltar, mostra o nome em texto em vez do ícone de imagem
 // partida. Ligado aqui em vez de um onerror inline no HTML.
