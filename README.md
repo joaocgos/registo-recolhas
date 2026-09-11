@@ -212,7 +212,10 @@ const CONFIG = {
     texto: { lado: 2048, qualidade: 0.82 },  // etiquetas, fatura, folha
     foto:  { lado: 1600, qualidade: 0.78 },  // equipamento, local
   },
-  LOJAS: [],          // caixas das lojas (ver abaixo)
+  LOJAS: [            // caixas das lojas (ver abaixo)
+    { nome: "Famalicão", caixa: "fotos.famalicao", dominio: "cate.com.pt" },
+    { nome: "Porto",     caixa: "fotos.porto",     dominio: "cate.com.pt" },
+  ],
   ENDPOINT: null,
 };
 ```
