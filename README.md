@@ -36,12 +36,12 @@ em `http://` nem a abrir o ficheiro diretamente do telemóvel.
 
 **GitHub Pages** (o que está em uso):
 
-1. Criar o repositório `catefoto` em <https://github.com/new>,
+1. Criar o repositório `CATEfoto` em <https://github.com/new>,
    **público** (o Pages só é gratuito em repositórios públicos).
 2. `git push -u origin main`
 3. No repositório: *Settings* → *Pages* → *Source: Deploy from a branch* →
    ramo `main`, pasta `/ (root)` → *Save*.
-4. Ao fim de um minuto fica em <https://joaocgos.github.io/catefoto/>.
+4. Ao fim de um minuto fica em <https://joaocgos.github.io/CATEfoto/>.
 
 Cada `git push` para `main` republica o site automaticamente.
 
@@ -185,8 +185,11 @@ const CONFIG = {
   MAX_ETIQUETAS: 2,     // etiquetas POR equipamento
   MAX_EQUIPAMENTOS: 20, // equipamentos declaráveis num registo
   AVISO_TAMANHO: 8 * 1024 * 1024,  // a partir daqui avisa que o registo é pesado
-  MAX_LADO: 1280,     // píxeis no lado maior
-  QUALIDADE: 0.72,    // 0 a 1
+  PERFIS: {
+    texto: { lado: 2048, qualidade: 0.82 },  // etiquetas, fatura, folha
+    foto:  { lado: 1600, qualidade: 0.78 },  // equipamento, local
+  },
+  LOJAS: [],          // caixas das lojas (ver abaixo)
   ENDPOINT: null,
 };
 ```
@@ -281,10 +284,24 @@ nome.
 equipamento, não para o registo todo: com três equipamentos declarados cabem
 três vezes isto. Os valores são provisórios; ajustar com o uso real.
 
-**Tamanho dos ficheiros** — com 1280 px e qualidade 0.72, uma fotografia de
-telemóvel passa de 3–5 MB para cerca de 120–180 KB, e continua a deixar ler o
-número de série de uma etiqueta. Um registo completo (2 etiquetas + 4 fotos) fica
-à volta de 600 KB. Se for preciso mais detalhe, subir `MAX_LADO` para 1600.
+**Caixas das lojas** — a lista `LOJAS`. A partilha dos telemóveis não deixa a
+app preencher o destinatário, por isso, com lojas configuradas, aparecem as
+caixas de todas lado a lado por cima do botão Partilhar, cada uma com um botão
+de copiar: o técnico copia a da sua loja e cola-a no "Para" do email. Cada
+entrada leva `nome`, `caixa` e `dominio` — o endereço é montado em tempo de
+execução, como o de cima, para não aparecer por extenso no código. Com a lista
+vazia mostra-se o destino único.
+
+**Qualidade das fotografias** — dois perfis em `PERFIS`. Onde há texto que tem
+de se ler (etiquetas, fatura, folha de serviço) usa-se o `texto`, a 2048 px e
+qualidade 0.82; nas fotografias do equipamento e do local, o `foto`, a 1600 px
+e 0.78. Medido com uma chapa e uma superfície riscada simuladas numa foto de
+12 MP: a 1280 px (a regulação anterior) os algarismos da letra miúda já se
+confundiam; as amolgadelas veem-se em qualquer regulação; os riscos muito finos
+numa foto de conjunto não são garantidos por nenhuma — por isso a ajuda das
+fotografias pede uma foto de perto a cada dano. A regulação pesa mais do que
+parece porque a cópia do email é quase sempre a única: as fotos tiradas pelo
+botão Câmara em regra não ficam na galeria.
 
 ---
 

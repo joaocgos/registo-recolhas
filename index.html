@@ -420,6 +420,28 @@
   }
   .passo-valor { flex: 1; min-width: 0; font-size: 15px; font-weight: 700; }
   .passo-alterar { flex: none; font-size: 13px; font-weight: 600; color: var(--red); }
+
+  /* ── Caixas das lojas, no rodapé ──────────────────────────────────────── */
+  .lojas { margin: 0 0 10px; }
+  .lojas-titulo { margin: 0 0 4px; font-size: 12px; color: var(--muted); }
+  .loja { display: flex; align-items: center; gap: 10px; padding: 5px 0; }
+  .loja + .loja { border-top: 1px solid var(--line); }
+  .loja-nome {
+    flex: none; min-width: 64px;
+    font-size: 13px; font-weight: 700; color: var(--ink);
+  }
+  .loja-end {
+    flex: 1; min-width: 0;
+    font-size: 13px; color: var(--ink-2);
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .loja-copiar {
+    flex: none; height: 34px; padding: 0 14px;
+    background: var(--card); color: var(--red);
+    border: 1.5px solid var(--line); border-radius: 9px;
+    font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
+  }
+  .loja-copiar:active { border-color: var(--red); background: var(--red-soft); }
 </style>
 </head>
 <body>
@@ -593,6 +615,8 @@
       <span id="tot-count">Sem fotografias</span>
       <span>Total <strong id="tot-size">0 KB</strong></span>
     </div>
+    <!-- Caixas das lojas, para copiar antes de partilhar (ver CONFIG.LOJAS) -->
+    <div class="lojas" id="lojas" hidden></div>
     <button type="button" class="send" id="send" disabled>
       <svg viewBox="0 0 24 24" fill="none" stroke-width="1.9"
            stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
@@ -605,7 +629,7 @@
     <p class="dest" id="aviso-tamanho" hidden>
       Registo pesado — pode ser recusado pelo email. Divide em dois.
     </p>
-    <p class="dest">Destino <b id="dest-mail">a carregar…</b></p>
+    <p class="dest" id="destino-unico">Destino <b id="dest-mail">a carregar…</b></p>
   </footer>
 
 </div>
@@ -657,6 +681,15 @@ const CONFIG = {
   EMAIL_CAIXA: "recolhas",
   EMAIL_DOMINIO: "cate.com.pt",
 
+  // Caixas de correio das lojas. Aparecem lado a lado por cima do botão
+  // Partilhar, cada uma com um botão de copiar: o técnico copia a da sua loja
+  // e cola-a no "Para" da app de email — a partilha dos telemóveis não deixa
+  // a app preencher o destinatário. Endereços em pedaços, como o de cima.
+  // Enquanto a lista estiver vazia, mostra-se o destino único acima.
+  LOJAS: [
+    // { nome: "Loja 1", caixa: "loja1", dominio: "cate.com.pt" },
+  ],
+
   // Limites POR equipamento. Um registo com três equipamentos permite três
   // vezes isto. Valores provisórios — ajustar com o uso real.
   MAX_FOTOS: 6,
@@ -681,10 +714,19 @@ const CONFIG = {
   // pode ter mais do que uma página).
   MAX_FATURA: 3,
 
-  // Compressão. 1280 px no lado maior com qualidade 0.72 dá ficheiros de
-  // 120-180 KB, que continuam a deixar ler o número de série de uma etiqueta.
-  MAX_LADO: 1280,
-  QUALIDADE: 0.72,
+  // Compressão, em dois perfis. Onde há texto que tem de se ler (etiquetas,
+  // fatura, folha de serviço) usa-se o perfil "texto"; nas fotografias do
+  // equipamento e do local, o perfil "foto".
+  //
+  // Medido em 2026-09-11 com uma chapa simulada numa foto de 12 MP: a 1280 px
+  // e 0.72 (a regulação anterior) os algarismos da letra miúda já se
+  // confundiam; a 1600 lia-se tudo; a 2048 ficava quase igual ao original.
+  // Pesa mais do que parece porque a cópia do email é quase sempre a única —
+  // as fotos tiradas pelo botão Câmara em regra não ficam na galeria.
+  PERFIS: {
+    texto: { lado: 2048, qualidade: 0.82 },
+    foto:  { lado: 1600, qualidade: 0.78 },
+  },
 
   // Envio automático (futuro). Enquanto for null, a página usa a partilha
   // nativa do telemóvel. Ao apontar para um endpoint que reencaminhe por
@@ -930,7 +972,7 @@ function viaElemento(ficheiro) {
   });
 }
 
-async function comprimir(ficheiro) {
+async function comprimir(ficheiro, perfil = CONFIG.PERFIS.foto) {
   let fonte;
   try {
     fonte = await createImageBitmap(ficheiro, { imageOrientation: "from-image" });
@@ -940,7 +982,7 @@ async function comprimir(ficheiro) {
 
   const largura = fonte.width || fonte.naturalWidth;
   const altura = fonte.height || fonte.naturalHeight;
-  const escala = Math.min(1, CONFIG.MAX_LADO / Math.max(largura, altura));
+  const escala = Math.min(1, perfil.lado / Math.max(largura, altura));
 
   const canvas = document.createElement("canvas");
   canvas.width = Math.round(largura * escala);
@@ -950,7 +992,7 @@ async function comprimir(ficheiro) {
   ctx.drawImage(fonte, 0, 0, canvas.width, canvas.height);
   if (fonte.close) fonte.close();
 
-  const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", CONFIG.QUALIDADE));
+  const blob = await new Promise((r) => canvas.toBlob(r, "image/jpeg", perfil.qualidade));
   if (!blob) throw new Error("falhou a compressão");
   return blob;
 }
@@ -960,6 +1002,13 @@ async function comprimir(ficheiro) {
    ═══════════════════════════════════════════════════════════════════════════ */
 // As etiquetas e as fotografias comportam-se da mesma maneira; só mudam o
 // limite e o nome. Isto evita ter dois caminhos quase iguais no código.
+// Que perfil de compressão usa cada parte: texto que tem de se ler vai mais
+// nítido; as fotografias gerais, mais leves.
+const PERFIL_POR_ALVO = {
+  etiquetas: "texto", fatura: "texto", folha: "texto",
+  fotos: "foto", local: "foto",
+};
+
 function colecao(eq, alvo) {
   if (alvo === "folha") {
     return { itens: estado.folha, max: CONFIG.MAX_FOLHA, nome: "fotografias da folha" };
@@ -1074,7 +1123,7 @@ async function adicionar(ficheiros, eq, alvo) {
 
     try {
       const [blob, capturada] = await Promise.all([
-        comprimir(ficheiro),
+        comprimir(ficheiro, CONFIG.PERFIS[PERFIL_POR_ALVO[alvo] || "foto"]),
         dataOriginal(ficheiro),
       ]);
       item.blob = blob;
@@ -1416,7 +1465,12 @@ function desenharEquipamentos() {
 
     cartao.appendChild(construirSubseccao(
       eq, "fotos", "Fotografias",
-      m.ajudaFotos || "O estado do equipamento e qualquer dano visível.",
+      // Um risco fino numa foto do equipamento inteiro não sobrevive a
+      // nenhuma compressão; de perto, sobrevive a todas. É a foto de perto
+      // que prova o dano — medido em 2026-09-11.
+      m.ajudaFotos || "O estado do equipamento. Se houver riscos ou " +
+                      "amolgadelas, tira também uma foto de perto a cada " +
+                      "um — é a de perto que prova o dano.",
       "in-fot-cam", "in-fot-gal"));
 
     caixa.appendChild(cartao);
@@ -1901,8 +1955,8 @@ async function enviar() {
       if (num && temEtiquetas) marcarEtiquetaEnviada(num, momento);
       concluir("aviso", "Falta enviar o email",
                "A partilha só entregou as fotografias à app de email. " +
-               "Abre-a e carrega em enviar — só aí o registo chega a " +
-               EMAIL_DESTINO + ".");
+               "Abre-a e carrega em enviar — só aí o registo chega " +
+               destinoDescrito() + ".");
       return;
     }
 
@@ -1955,7 +2009,8 @@ function reserva(ficheiros, assunto, corpo) {
            "email que se abriu e carrega em enviar.");
 
   const texto = corpo + "\n\n(Anexa as fotografias que acabaram de ser descarregadas.)";
-  window.location.href = `mailto:${EMAIL_DESTINO}` +
+  // Com lojas, não se sabe qual é a do técnico: o "Para" fica em branco.
+  window.location.href = `mailto:${LOJAS.length ? "" : EMAIL_DESTINO}` +
     `?subject=${encodeURIComponent(assunto)}&body=${encodeURIComponent(texto)}`;
 }
 
@@ -2011,6 +2066,61 @@ function recomeçar() {
    Ligações
    ═══════════════════════════════════════════════════════════════════════════ */
 $("dest-mail").textContent = EMAIL_DESTINO;
+
+// Caixas das lojas. A partilha não deixa a app escolher o destinatário, por
+// isso mostram-se as duas com botão de copiar: o técnico copia a da sua loja e
+// cola-a no "Para" do email.
+const LOJAS = CONFIG.LOJAS.map((l) => ({
+  nome: l.nome,
+  endereco: l.caixa + String.fromCharCode(64) + l.dominio,
+}));
+
+const destinoDescrito = () =>
+  LOJAS.length ? "à caixa da tua loja" : "a " + EMAIL_DESTINO;
+
+async function copiarEndereco(loja) {
+  try {
+    await navigator.clipboard.writeText(loja.endereco);
+    aviso(`Copiado: ${loja.endereco}. Cola-o no «Para» do email.`);
+  } catch (_) {
+    // Sem acesso à área de transferência (browser antigo, permissão negada):
+    // pelo menos fica escrito, para se copiar à mão.
+    aviso(`Não foi possível copiar. O endereço é ${loja.endereco}.`);
+  }
+}
+
+function desenharLojas() {
+  const caixa = $("lojas");
+  caixa.textContent = "";
+  caixa.hidden = !LOJAS.length;
+  $("destino-unico").hidden = !!LOJAS.length;
+  if (!LOJAS.length) return;
+
+  const titulo = document.createElement("p");
+  titulo.className = "lojas-titulo";
+  titulo.textContent = "Copia a caixa da tua loja e cola-a no «Para»:";
+  caixa.appendChild(titulo);
+
+  LOJAS.forEach((l) => {
+    const linha = document.createElement("div");
+    linha.className = "loja";
+    const nome = document.createElement("span");
+    nome.className = "loja-nome";
+    nome.textContent = l.nome;
+    const endereco = document.createElement("span");
+    endereco.className = "loja-end";
+    endereco.textContent = l.endereco;
+    const botao = document.createElement("button");
+    botao.type = "button";
+    botao.className = "loja-copiar";
+    botao.textContent = "copiar";
+    botao.addEventListener("click", () => copiarEndereco(l));
+    linha.append(nome, endereco, botao);
+    caixa.appendChild(linha);
+  });
+}
+
+desenharLojas();
 
 // Se o logótipo faltar, mostra o nome em texto em vez do ícone de imagem
 // partida. Ligado aqui em vez de um onerror inline no HTML.
