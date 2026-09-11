@@ -2085,8 +2085,9 @@ function recomeçar() {
   $("recebido").value = "";
   ["num-err", "cliente-err", "morada-err", "pretendido-err", "tec-err",
    "mom-err", "srv-err", "gar-err", "fot-err"].forEach((id) => marcar(null, id, false));
-  $("num").classList.remove("invalid");
-  $("cliente").classList.remove("invalid");
+  // Nenhum campo fica vermelho de um registo para o seguinte.
+  ["num", "cliente", "morada", "tec", "pretendido"]
+    .forEach((id) => $(id).classList.remove("invalid"));
   actualizarCampoNumero();
   $("done").classList.remove("show");
   concluidoOk = false;
@@ -2195,6 +2196,15 @@ $("num").addEventListener("input", (e) => {
 
 $("cliente").addEventListener("input", (e) => {
   if (e.target.value.trim().length >= 2) marcar("cliente", "cliente-err", false);
+});
+
+// Tal como os outros campos: o erro sai assim que o campo fica valido, em vez
+// de ficar vermelho ate se voltar a carregar em Partilhar.
+$("morada").addEventListener("input", (e) => {
+  if (e.target.value.trim().length >= 3) marcar("morada", "morada-err", false);
+});
+$("pretendido").addEventListener("input", (e) => {
+  if (e.target.value.trim().length >= 3) marcar("pretendido", "pretendido-err", false);
 });
 
 // O nome do técnico fica guardado no telemóvel — escreve-se uma vez só.
