@@ -446,6 +446,19 @@
     font: inherit; font-size: 13px; font-weight: 700; cursor: pointer;
   }
   .loja-copiar:active { border-color: var(--red); background: var(--red-soft); }
+
+  /* ── Dispensa com registo ─────────────────────────────────────────────── */
+  .dispensa { margin-top: 12px; }
+  .dispensa-marca {
+    display: flex; align-items: flex-start; gap: 10px;
+    font-size: 13.5px; line-height: 1.35; color: var(--ink-2); cursor: pointer;
+  }
+  .dispensa-marca input {
+    width: 20px; height: 20px; flex: none; margin: 1px 0 0;
+    accent-color: var(--red);
+  }
+  input.dispensa-motivo { height: 44px; margin-top: 8px; font-size: 14px; }
+  #num:disabled { opacity: .45; }
 </style>
 </head>
 <body>
@@ -528,6 +541,7 @@
         <input id="num" type="text" inputmode="numeric" autocomplete="off"
                placeholder="26000000" aria-describedby="num-err">
         <p class="err" id="num-err">Indica o número do serviço.</p>
+        <div id="dispensa-numero" hidden></div>
       </div>
 
       <div class="field" id="campo-cliente" hidden>
@@ -579,6 +593,7 @@
 
     <!-- Fatura de compra: só nos registos em garantia ----------------------->
     <div id="fatura"></div>
+    <p class="err" id="fat-err">Junta a fatura, ou marca que o cliente não a tem.</p>
 
     <!-- Fotografias do local: nos momentos sem equipamentos ------------------>
     <div id="local"></div>
@@ -765,16 +780,19 @@ const EMAIL_DESTINO = CONFIG.EMAIL_CAIXA + String.fromCharCode(64) + CONFIG.EMAI
 const MOMENTOS = [
   { chave: "recolha", nome: "Recolha", detalhe: "em casa do cliente",
     marca: "RECOLHA", texto: "Recolha em casa do cliente",
-    // Nem sempre há serviço aberto no momento da recolha. Sem número, exige-se
-    // o nome do cliente — o registo tem de ser atribuível a alguém.
-    numeroOpcional: true,
+    // Nem sempre há serviço aberto no momento da recolha. O número é pedido,
+    // mas pode ser dispensado — fica registado, e aí exige-se o nome do cliente.
+    numeroDispensavel: true,
+    // É no primeiro contacto que a fatura aparece: em garantia, pede-se aqui.
+    faturaObrigatoria: true,
     icone: '<path d="M3 10.5 12 3l9 7.5"/><path d="M5 9.5V21h14V9.5"/><path d="M9.5 21v-6h5v6"/>' },
 
   { chave: "reparacao_local", nome: "Reparação", detalhe: "resolvida no local",
     marca: "REPARACAO LOCAL", texto: "Reparação no local, em casa do cliente",
     // Mesma situação da recolha: vai-se a casa e o serviço pode ser aberto só
-    // depois. Sem número, o nome do cliente identifica o registo.
-    numeroOpcional: true,
+    // depois. O número é pedido, mas pode ser dispensado.
+    numeroDispensavel: true,
+    faturaObrigatoria: true,
     icone: '<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/>' },
 
   // Cobre as duas formas de o equipamento dar entrada: trazido pelo técnico
@@ -784,6 +802,7 @@ const MOMENTOS = [
     marca: "OFICINA", texto: "Entrada em oficina",
     // É pela chapa que a oficina identifica a máquina que acabou de entrar.
     etiquetaObrigatoria: true,
+    faturaObrigatoria: true,
     ajudaEtiquetas: "A chapa com a marca, o modelo e o número de série. É por " +
                     "ela que a oficina identifica a máquina, por isso não pode faltar.",
     icone: '<path d="M3 21V9.5l9-6 9 6V21z"/><path d="M7.5 21v-7h9v7"/><path d="M7.5 16.6h9M7.5 18.8h9"/>' },
@@ -800,6 +819,7 @@ const MOMENTOS = [
     // Num equipamento novo é o número de série que dá acesso à garantia: se não
     // ficar registado agora, pode ser preciso voltar lá para o ir buscar.
     etiquetaObrigatoria: true,
+    faturaObrigatoria: true,
     ajudaEtiquetas: "A chapa com a marca, o modelo e o número de série — " +
                     "é o que dá acesso à garantia do equipamento novo.",
     // Num equipamento acabado de instalar não há danos anteriores a documentar.
@@ -870,19 +890,34 @@ const PASSOS = [
 /* ═══════════════════════════════════════════════════════════════════════════
    Estado
    ═══════════════════════════════════════════════════════════════════════════ */
+// Cada dispensa: se foi marcada e porquê. A do número guarda também o que
+// estava escrito, para o repor se a marca for tirada.
+const novasDispensas = () => ({
+  numero: { marcada: false, motivo: "", anterior: "" },
+  fatura: { marcada: false, motivo: "" },
+});
+
+// Um equipamento: as suas fotos e a dispensa da sua etiqueta.
+const novoEquipamento = () => ({
+  etiquetas: [], fotos: [],
+  dispensaEtiqueta: { marcada: false, motivo: "" },
+});
+
 const estado = {
   momento: null,
   servico: null,
   garantia: null,
   // Cada equipamento tem as suas etiquetas e as suas fotografias, para quem
   // recebe o email conseguir dizer que foto pertence a que máquina.
-  equipamentos: [{ etiquetas: [], fotos: [] }],
+  equipamentos: [novoEquipamento()],
   // A folha de serviço é do serviço, não de um equipamento — vive à parte.
   folha: [],
   // Fotografias do local, nos momentos sem equipamentos.
   local: [],
   // Fatura de compra: a prova da garantia. Só nos registos em garantia.
   fatura: [],
+  // Omissões assumidas por quem regista (ver caixaDispensa).
+  dispensas: novasDispensas(),
 };
 
 // Qual o bloco e a secção que pediram o seletor de ficheiros. Há só quatro
@@ -1357,6 +1392,73 @@ function desenharFolha() {
 // A fatura de compra é o que prova que o equipamento está coberto, por isso só
 // aparece nos registos em garantia. Tal como a folha, é do serviço e não de um
 // equipamento.
+// Caixa "omitir — fica registado", ligada a um objecto { marcada, motivo }.
+// Serve para o número, a etiqueta de cada equipamento e a fatura. Os cartões
+// são desenhados de novo a cada mudança, por isso o estado vive no objecto e a
+// caixa só o mostra.
+function caixaDispensa(dispensa, texto, aoMudar) {
+  const caixa = document.createElement("div");
+  caixa.className = "dispensa";
+
+  const rotulo = document.createElement("label");
+  rotulo.className = "dispensa-marca";
+  const marca = document.createElement("input");
+  marca.type = "checkbox";
+  marca.checked = dispensa.marcada;
+  const frase = document.createElement("span");
+  frase.textContent = texto;
+  rotulo.append(marca, frase);
+
+  const motivo = document.createElement("input");
+  motivo.type = "text";
+  motivo.className = "dispensa-motivo";
+  motivo.placeholder = "Motivo (opcional)";
+  motivo.maxLength = 120;
+  motivo.value = dispensa.motivo;
+  motivo.hidden = !dispensa.marcada;
+
+  marca.addEventListener("change", () => {
+    dispensa.marcada = marca.checked;
+    motivo.hidden = !marca.checked;
+    if (!marca.checked) { dispensa.motivo = ""; motivo.value = ""; }
+    marcar(null, "fot-err", false);
+    marcar(null, "fat-err", false);
+    if (aoMudar) aoMudar();
+  });
+  motivo.addEventListener("input", () => { dispensa.motivo = motivo.value.trim(); });
+
+  caixa.append(rotulo, motivo);
+  return caixa;
+}
+
+// A dispensa do número vive por baixo do campo, no cartão do serviço. Marcá-la
+// esvazia e bloqueia o número (não se tem um número que se diz não ter);
+// tirá-la repõe o que lá estava.
+function desenharDispensaNumero() {
+  const caixa = $("dispensa-numero");
+  caixa.textContent = "";
+  const aplica = marcaMomento("numeroDispensavel");
+  const d = estado.dispensas.numero;
+  if (!aplica && d.marcada) {
+    // Noutro momento esta dispensa não existe: desfaz-se, e o número volta.
+    if (!$("num").value && d.anterior) $("num").value = d.anterior;
+    Object.assign(d, { marcada: false, motivo: "", anterior: "" });
+  }
+  caixa.hidden = !aplica;
+  $("num").disabled = aplica && d.marcada;
+  if (!aplica) return;
+
+  caixa.appendChild(caixaDispensa(d, "Não tenho o número — omitir (fica registado)", () => {
+    const num = $("num");
+    if (d.marcada) { d.anterior = num.value; num.value = ""; }
+    else { num.value = d.anterior || ""; d.anterior = ""; }
+    marcar("num", "num-err", false);
+    // Passa pelo tratamento normal do número: folha de serviço, aviso de fotos
+    // escondidas, rótulos e o desenho desta própria caixa.
+    num.dispatchEvent(new Event("input"));
+  }));
+}
+
 function emGarantia() {
   return precisaGarantia() && estado.garantia === "garantia";
 }
@@ -1372,7 +1474,7 @@ function desenharFatura() {
   const cab = document.createElement("div");
   cab.className = "card-head";
   const h2 = document.createElement("h2");
-  h2.textContent = "Fatura · opcional";
+  h2.textContent = faturaObrigatoria() ? "Fatura · obrigatória" : "Fatura · opcional";
   const cnt = document.createElement("span");
   cnt.className = "counter" +
     (estado.fatura.length >= CONFIG.MAX_FATURA ? " full" : "");
@@ -1402,6 +1504,10 @@ function desenharFatura() {
   estado.fatura.forEach((f) => thumbs.appendChild(cartaoFoto(f, 0, "fatura")));
 
   cartao.append(cab, dica, pickers, thumbs);
+  if (faturaObrigatoria()) {
+    cartao.appendChild(caixaDispensa(estado.dispensas.fatura,
+      "O cliente não tem a fatura — omitir (fica registado)"));
+  }
   caixa.appendChild(cartao);
 }
 
@@ -1494,10 +1600,18 @@ function desenharEquipamentos() {
     const m = MOMENTO_POR_CHAVE[estado.momento] || {};
     const obrigatoria = etiquetaObrigatoria();
 
-    cartao.appendChild(construirSubseccao(
+    const subEtiquetas = construirSubseccao(
       eq, "etiquetas", obrigatoria ? "Etiquetas · obrigatória" : "Etiquetas",
       m.ajudaEtiquetas || "A chapa com a marca, o modelo e o número de série.",
-      "in-etq-cam", "in-etq-gal"));
+      "in-etq-cam", "in-etq-gal");
+    // Obrigatória, mas há chapas que não se leem ou já não existem: aí
+    // dispensa-se, e fica escrito. Antes, esse caso era um beco sem saída.
+    if (obrigatoria) {
+      subEtiquetas.appendChild(caixaDispensa(
+        estado.equipamentos[eq].dispensaEtiqueta,
+        "Chapa ilegível ou inexistente — omitir (fica registado)"));
+    }
+    cartao.appendChild(subEtiquetas);
 
     cartao.appendChild(construirSubseccao(
       eq, "fotos", "Fotografias",
@@ -1613,17 +1727,25 @@ function desenharSeletor(caixaId, lista, campo, erroId) {
 // registar — e assim deixa de ser possível preencher tudo e esquecer a escolha.
 // Nem todos os momentos exigem um número de serviço: no Orçamento as
 // fotografias servem para o produzir, e o serviço pode ainda não existir.
+// Três níveis: obrigatório; obrigatório mas dispensável (Recolha, Reparação);
+// opcional (Orçamento, onde o normal é ainda não haver serviço).
 function numeroObrigatorio() {
   const m = MOMENTO_POR_CHAVE[estado.momento];
-  return !(m && m.numeroOpcional);
+  if (m && m.numeroOpcional) return false;
+  if (m && m.numeroDispensavel && estado.dispensas.numero.marcada) return false;
+  return true;
 }
+
+const numeroDispensado = () =>
+  marcaMomento("numeroDispensavel") && estado.dispensas.numero.marcada;
 
 function actualizarCampoNumero() {
   const obrigatorio = numeroObrigatorio();
-  $("num-lbl").textContent = obrigatorio
-    ? "Número do serviço"
-    : "Número do serviço (opcional)";
-  $("num").placeholder = obrigatorio ? "26000000" : "ainda sem número";
+  const dispensado = numeroDispensado();
+  $("num-lbl").textContent = obrigatorio ? "Número do serviço"
+    : dispensado ? "Número do serviço (omitido)" : "Número do serviço (opcional)";
+  $("num").placeholder = dispensado ? "omitido"
+    : obrigatorio ? "26000000" : "ainda sem número";
   if (!obrigatorio) marcar("num", "num-err", false);
 
   $("campo-recebido").hidden = !marcaMomento("campoRecebidoPor");
@@ -1634,7 +1756,10 @@ function actualizarCampoNumero() {
 
   // O nome do cliente só aparece onde o número pode faltar. Aí passa a ser a
   // única forma de saber a quem pertence o registo.
-  $("campo-cliente").hidden = obrigatorio && !marcaMomento("clienteSempre");
+  // O cliente aparece onde o número pode faltar (opcional ou dispensável) e
+  // onde é sempre pedido. Sem número, é a forma de saber de quem é o registo.
+  $("campo-cliente").hidden = !(marcaMomento("numeroOpcional")
+    || marcaMomento("numeroDispensavel") || marcaMomento("clienteSempre"));
   if ($("campo-cliente").hidden) {
     marcar("cliente", "cliente-err", false);
   } else {
@@ -1642,6 +1767,7 @@ function actualizarCampoNumero() {
       ? "Nome do cliente"
       : "Nome do cliente (opcional)";
   }
+  desenharDispensaNumero();
 }
 
 const marcaMomento = (nome) => {
@@ -1652,6 +1778,8 @@ const marcaMomento = (nome) => {
 const semEquipamentos = () => marcaMomento("semEquipamentos");
 const etiquetaObrigatoria = () => marcaMomento("etiquetaObrigatoria");
 const precisaGarantia = () => !marcaMomento("semGarantia");
+// Obrigatória com dispensa, no primeiro contacto e só em garantia.
+const faturaObrigatoria = () => emGarantia() && marcaMomento("faturaObrigatoria");
 
 // O cliente é exigido quando o momento o pede sempre, ou quando não há número
 // de serviço — o registo tem de ser atribuível a alguém.
@@ -1724,6 +1852,10 @@ function validar() {
   const tec = $("tec").value.trim();
 
   const numMal = numeroObrigatorio() && !/^\d+$/.test(num);
+  // A fatura, onde é obrigatória, só pode faltar com a dispensa marcada.
+  const fatMal = faturaObrigatoria()
+    && !estado.fatura.some((f) => f.estado === "pronta")
+    && !estado.dispensas.fatura.marcada;
   const cliMal = clienteObrigatorio() && $("cliente").value.trim().length < 2;
   const morMal = marcaMomento("camposContacto") && $("morada").value.trim().length < 3;
   const preMal = marcaMomento("campoPretendido") && $("pretendido").value.trim().length < 3;
@@ -1744,11 +1876,16 @@ function validar() {
   // passar sem ela.
   const semEtq = etiquetaObrigatoria() && !semEq
     ? estado.equipamentos.findIndex(
-        (e) => !e.etiquetas.some((f) => f.estado === "pronta"))
+        (e) => !e.etiquetas.some((f) => f.estado === "pronta")
+               && !e.dispensaEtiqueta.marcada)
     : -1;
   const faltaEtq = !fotMal && !faltaEq && semEtq >= 0;
 
+  $("num-err").textContent = marcaMomento("numeroDispensavel")
+    ? "Indica o número do serviço, ou marca que não o tens."
+    : "Indica o número do serviço.";
   marcar("num", "num-err", numMal);
+  marcar(null, "fat-err", fatMal);
   marcar("cliente", "cliente-err", cliMal);
   marcar("morada", "morada-err", morMal);
   marcar("pretendido", "pretendido-err", preMal);
@@ -1764,14 +1901,14 @@ function validar() {
     erroFotos.textContent = `O equipamento ${vazio + 1} não tem fotografias.`;
   } else if (faltaEtq) {
     erroFotos.textContent = varios
-      ? `O equipamento ${semEtq + 1} não tem etiqueta.`
-      : "Falta a fotografia da etiqueta do equipamento.";
+      ? `O equipamento ${semEtq + 1} não tem etiqueta — junta-a, ou marca que a chapa não se lê.`
+      : "Falta a etiqueta do equipamento — junta-a, ou marca que a chapa não se lê.";
   }
   erroFotos.classList.toggle("show", fotMal || faltaEq || faltaEtq);
 
   const primeiro = srvMal ? "servicos" : momMal ? "momentos" : garMal ? "garantias"
                  : numMal ? "num" : cliMal ? "cliente" : morMal ? "morada"
-                 : tecMal ? "tec" : preMal ? "pretendido" : null;
+                 : tecMal ? "tec" : preMal ? "pretendido" : fatMal ? "fatura" : null;
   if (primeiro) {
     levarA($(primeiro), "center");
     if (["num", "cliente", "morada", "tec", "pretendido"].includes(primeiro)) {
@@ -1783,7 +1920,7 @@ function validar() {
     levarA($("equipamentos").children[culpado], "center");
   }
   return !(numMal || cliMal || morMal || preMal || tecMal || momMal || srvMal || garMal
-           || fotMal || faltaEq || faltaEtq);
+           || fotMal || faltaEq || faltaEtq || fatMal);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -1900,12 +2037,39 @@ function construirCorpo(num, momento, servico, garantia = null) {
     .some((e) => e.etiquetas.some((f) => f.estado === "pronta"));
   // Num levantamento de local não há equipamento nem etiqueta: dizer que
   // faltam seria falar de uma coisa que não existe neste tipo de registo.
-  if (!algumaEtiqueta && !semEquipamentos()) {
+  if (!algumaEtiqueta && !semEquipamentos()
+      && !estado.equipamentos.some((e) => e.dispensaEtiqueta.marcada)) {
     const anterior = etiquetaJaEnviada(num);
     linhas.push(anterior
       ? `Etiquetas: nenhuma neste registo — já enviadas no registo de ` +
         `${anterior.tipoNome} (${dataHora(anterior.data)}).`
       : "Etiquetas: nenhuma neste registo.");
+  }
+
+  // Omissões assumidas por quem regista: ficam escritas, com o motivo quando
+  // existe, para quem arquiva distinguir uma decisão de um esquecimento. Só
+  // contam onde a dispensa existe neste momento.
+  const omitidos = [];
+  const comMotivo = (texto, d) => (d.motivo ? `${texto} — "${d.motivo}"` : texto);
+  const variosEq = estado.equipamentos.length > 1;
+  if (mom.numeroDispensavel && !num && estado.dispensas.numero.marcada) {
+    omitidos.push(comMotivo("Número do serviço", estado.dispensas.numero));
+  }
+  if (mom.etiquetaObrigatoria && !mom.semEquipamentos) {
+    estado.equipamentos.forEach((e, i) => {
+      if (e.dispensaEtiqueta.marcada && !e.etiquetas.some((f) => f.estado === "pronta")) {
+        omitidos.push(comMotivo(variosEq ? `Etiqueta do equipamento ${i + 1}`
+                                         : "Etiqueta do equipamento", e.dispensaEtiqueta));
+      }
+    });
+  }
+  if (garantia === "garantia" && mom.faturaObrigatoria && !nFatura
+      && estado.dispensas.fatura.marcada) {
+    omitidos.push(comMotivo("Fatura", estado.dispensas.fatura));
+  }
+  if (omitidos.length) {
+    linhas.push("", "Omitido por decisão de quem regista:",
+                ...omitidos.map((t) => "  · " + t));
   }
 
   const capturas = [];
@@ -2074,17 +2238,20 @@ function recomeçar() {
   });
   // Mantém-se o número de equipamentos: quem faz cinco máquinas seguidas num
   // hotel não quer voltar a contá-las a cada registo.
-  estado.equipamentos = estado.equipamentos.map(() => ({ etiquetas: [], fotos: [] }));
+  estado.equipamentos = estado.equipamentos.map(() => novoEquipamento());
   estado.folha = [];
   estado.fatura = [];
   estado.local = [];
+  // Cada registo decide as suas omissões.
+  estado.dispensas = novasDispensas();
+  $("num").disabled = false;
   ["morada", "contacto", "pretendido"].forEach((id) => { $(id).value = ""; });
   $("obs").value = "";
   $("num").value = "";
   $("cliente").value = "";
   $("recebido").value = "";
   ["num-err", "cliente-err", "morada-err", "pretendido-err", "tec-err",
-   "mom-err", "srv-err", "gar-err", "fot-err"].forEach((id) => marcar(null, id, false));
+   "mom-err", "srv-err", "gar-err", "fot-err", "fat-err"].forEach((id) => marcar(null, id, false));
   // Nenhum campo fica vermelho de um registo para o seguinte.
   ["num", "cliente", "morada", "tec", "pretendido"]
     .forEach((id) => $(id).classList.remove("invalid"));
@@ -2288,6 +2455,7 @@ const ligarEntrada = (entradaId) => {
     e.target.value = "";           // permite repetir o mesmo ficheiro
     adicionar(ficheiros, pedido.eq, pedido.alvo);
     marcar(null, "fot-err", false);
+    marcar(null, "fat-err", false);
   });
 };
 
@@ -2297,7 +2465,7 @@ const ligarEntrada = (entradaId) => {
 // sem aviso, por isso pede-se antes que sejam removidas à mão.
 $("eq-mais").addEventListener("click", () => {
   if (estado.equipamentos.length >= CONFIG.MAX_EQUIPAMENTOS) return;
-  estado.equipamentos.push({ etiquetas: [], fotos: [] });
+  estado.equipamentos.push(novoEquipamento());
   desenhar();
 });
 

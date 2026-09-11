@@ -112,9 +112,32 @@ Sem número de serviço o cartão não aparece — não haveria folha a que se r
 ### Fatura
 
 Nos registos **em garantia** aparece um cartão para fotografar a fatura de
-compra — é o que prova que o equipamento está coberto. É opcional e cabem três
+compra — é o que prova que o equipamento está coberto. Cabem três
 fotografias. Se o cliente tiver a fatura no telemóvel, fotografa-se o ecrã. Os
 ficheiros saem como `26000123_recolha_dom_gar_fatura_01.jpg`.
+
+No primeiro contacto é obrigatória com dispensa ("O cliente não tem a fatura");
+na Entrega é opcional (ver `faturaObrigatoria`).
+
+### Dispensa com registo
+
+Três coisas podem ser obrigatórias e, ainda assim, faltar por boas razões: o
+**número do serviço** (ainda não aberto), a **etiqueta** de um equipamento
+(chapa ilegível ou inexistente) e a **fatura** (o cliente não a tem). Para
+essas há uma caixa — *"… — omitir (fica registado)"* — que deixa partilhar sem
+elas. Ao marcar, aparece um campo opcional para o motivo.
+
+A omissão fica escrita no email, para quem arquiva distinguir uma decisão de
+um esquecimento:
+
+    Omitido por decisão de quem regista:
+      · Número do serviço — "Serviço ainda por abrir"
+      · Etiqueta do equipamento 2
+      · Fatura — "Comprou online, envia depois"
+
+Marcar a dispensa do número esvazia e bloqueia o campo; tirar a marca, ou
+mudar para um momento onde a dispensa não existe, repõe o que lá estava. Um
+"Novo registo" começa sempre sem dispensas.
 
 Tal como a folha de serviço, é do serviço e não de um equipamento: nunca leva o
 prefixo `eq`. Não aparece em "fora de garantia" nem no Orçamento.
@@ -207,10 +230,12 @@ sentido, `detalhe` para a segunda linha do botão — que pode ficar vazia.
 
 **Exceções por momento.** Nem todos os momentos precisam das mesmas coisas, e
 essas diferenças declaram-se na própria entrada em vez de ficarem espalhadas
-pelo código. Existem duas marcas:
+pelo código. As marcas existentes:
 
     numeroOpcional: true
+    numeroDispensavel: true
     etiquetaObrigatoria: true
+    faturaObrigatoria: true
     campoRecebidoPor: true
     ajudaEtiquetas: "..."
     ajudaFotos: "..."
@@ -220,25 +245,32 @@ pelo código. Existem duas marcas:
     campoPretendido: true
     semGarantia: true
 
-Está ligada nos três momentos em que o serviço pode ainda não existir: a
-**Recolha** e a **Reparação no local** (vai-se a casa do cliente e o serviço é
-aberto depois) e o **Orçamento** (as fotografias servem justamente para o
-*produzir*).
+**O número do serviço** tem três níveis:
 
-Fica desligada na **Entrada Oficina**, na **Entrega** e na **Montagem**, onde o
-serviço já existe — exigir o número é o que garante que o registo fica ligado
-ao processo.
+- **Obrigatório** — Entrada Oficina, Entrega e Montagem, onde o serviço já
+  existe: exigir o número é o que liga o registo ao processo.
+- **Obrigatório com dispensa** (`numeroDispensavel`) — Recolha e Reparação no
+  local: vai-se a casa do cliente e o serviço pode ser aberto só depois. O
+  número é pedido, mas pode ser omitido com a caixa por baixo do campo (ver
+  *Dispensa com registo*).
+- **Opcional** (`numeroOpcional`) — Orçamento: as fotografias servem
+  justamente para *produzir* o serviço. O rótulo diz "(opcional)" e não há
+  caixa.
 
-Com a marca ligada, o rótulo passa a "Número do serviço (opcional)" e aparece o
-campo **Nome do cliente** — que fica obrigatório se o número ficar vazio. Um
-registo tem sempre de ser atribuível a alguém: ou pelo serviço, ou pelo cliente.
+Nos dois últimos aparece o campo **Nome do cliente**, obrigatório sempre que o
+número falte. Um registo tem sempre de ser atribuível a alguém: ou pelo
+serviço, ou pelo cliente. Dispensar o número não dispensa o cliente.
 
-`etiquetaObrigatoria` está ligada na **Entrada Oficina** e na **Montagem**: é pela chapa que a
-oficina identifica a máquina que acabou de entrar, por isso não se deixa
-partilhar sem ela. O cartão passa a dizer "Etiquetas · obrigatória" e, se
-faltar, a validação aponta o equipamento em causa. Nos outros momentos as
-etiquetas continuam opcionais — há equipamentos sem chapa legível, e obrigar
-criaria um beco sem saída.
+`etiquetaObrigatoria` está ligada na **Entrada Oficina** e na **Montagem**: é
+pela chapa que a oficina identifica a máquina que acabou de entrar. O cartão
+passa a dizer "Etiquetas · obrigatória" e, se faltar, a validação aponta o
+equipamento em causa. Como há chapas ilegíveis ou arrancadas, cada equipamento
+tem a sua caixa de dispensa. Nos outros momentos as etiquetas são opcionais.
+
+`faturaObrigatoria` marca o **primeiro contacto** — Recolha, Reparação no
+local, Entrada Oficina e Montagem. Aí, em garantia, a fatura passa a
+obrigatória com dispensa. Na Entrega fica opcional e sem caixa: nessa altura a
+fatura normalmente já seguiu, e uma caixa em todos os registos virava reflexo.
 
 `ajudaEtiquetas` e `ajudaFotos` substituem o texto de ajuda dessas secções. O
 mesmo campo pede coisas diferentes conforme o momento: na Entrada Oficina a
