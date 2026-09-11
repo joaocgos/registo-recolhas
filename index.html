@@ -898,6 +898,30 @@ let concluidoOk = false;   // só true quando houve confirmação real de envio
 
 const $ = (id) => document.getElementById(id);
 
+// Deslizar ate um elemento. Faz-se suave, mas ha browsers onde a animacao nao
+// corre (visto no browser de teste: a pagina ficava parada) e ai o tecnico
+// tocava e nada acontecia. Se ao fim de um instante a pagina nao se mexeu e o
+// elemento continua fora de vista, salta de imediato.
+function levarA(el, bloco = "nearest") {
+  if (!el) return;
+  const antes = window.scrollY;
+  el.scrollIntoView({ behavior: "smooth", block: bloco });
+  setTimeout(() => {
+    const r = el.getBoundingClientRect();
+    const visivel = r.top >= 0 && r.bottom <= window.innerHeight;
+    if (window.scrollY === antes && !visivel) el.scrollIntoView({ block: bloco });
+  }, 350);
+}
+
+// O mesmo para voltar ao topo.
+function subirAoTopo() {
+  const antes = window.scrollY;
+  window.scrollTo({ top: 0, behavior: "smooth" });
+  setTimeout(() => {
+    if (window.scrollY === antes && antes > 0) window.scrollTo(0, 0);
+  }, 350);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    Leitura da data original (EXIF)
 
@@ -1577,7 +1601,7 @@ function desenharSeletor(caixaId, lista, campo, erroId) {
       // Levar o técnico ao passo seguinte, ou ao formulário quando acabou.
       const seguinte = document.querySelector(".passo:not([hidden]):not(.resumido)")
         || document.querySelector("#resto .card");
-      if (seguinte) seguinte.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      if (seguinte) levarA(seguinte, "nearest");
       avisarEscondidas(antes);
     });
 
@@ -1749,15 +1773,14 @@ function validar() {
                  : numMal ? "num" : cliMal ? "cliente" : morMal ? "morada"
                  : tecMal ? "tec" : preMal ? "pretendido" : null;
   if (primeiro) {
-    $(primeiro).scrollIntoView({ behavior: "smooth", block: "center" });
+    levarA($(primeiro), "center");
     if (["num", "cliente", "morada", "tec", "pretendido"].includes(primeiro)) {
       $(primeiro).focus({ preventScroll: true });
     }
   }
   const culpado = faltaEq ? vazio : faltaEtq ? semEtq : -1;
   if (culpado >= 0) {
-    $("equipamentos").children[culpado]
-      .scrollIntoView({ behavior: "smooth", block: "center" });
+    levarA($("equipamentos").children[culpado], "center");
   }
   return !(numMal || cliMal || morMal || preMal || tecMal || momMal || srvMal || garMal
            || fotMal || faltaEq || faltaEtq);
@@ -2070,8 +2093,11 @@ function recomeçar() {
   editando = null;
   actualizarVisibilidade();
   desenhar();
-  window.scrollTo({ top: 0, behavior: "smooth" });
-  $("num").focus();
+  subirAoTopo();
+  // Sem preventScroll, o foco fazia o browser deslizar ate ao campo antes de a
+  // subida ao topo acontecer, e a pagina ficava a meio. No topo o campo ja
+  // esta a vista.
+  $("num").focus({ preventScroll: true });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -2136,7 +2162,7 @@ desenharLojas();
 
 // A linha do rodapé leva ao cartão das lojas.
 $("ir-lojas").addEventListener("click", () => {
-  $("card-lojas").scrollIntoView({ behavior: "smooth", block: "center" });
+  levarA($("card-lojas"), "center");
 });
 
 // Se o logótipo faltar, mostra o nome em texto em vez do ícone de imagem
@@ -2237,7 +2263,7 @@ PASSOS.forEach((p) => {
   $(p.cartao).querySelector(".passo-resumo").addEventListener("click", () => {
     editando = p.campo;
     actualizarVisibilidade();
-    $(p.cartao).scrollIntoView({ behavior: "smooth", block: "nearest" });
+    levarA($(p.cartao), "nearest");
   });
 });
 actualizarVisibilidade();
