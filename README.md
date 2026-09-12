@@ -113,7 +113,7 @@ email*. Nenhum dos dois promete o que a página não pode garantir.
 Se a partilha correr mal — a app de email fechou, o rascunho perdeu-se,
 escolheu-se a app errada — o ecrã final tem **Partilhar outra vez**, que repete
 tudo com as mesmas fotografias. Estas só desaparecem quando se toca em
-*Já enviei — novo registo*.
+*Novo registo*.
 
 ### Folha de serviço
 

@@ -2263,7 +2263,6 @@ function concluir(tipo, titulo, mensagem) {
   // não houver confirmação, tem de haver caminho de volta.
   $("retry").hidden = enviado;
   $("done-rodape").hidden = enviado;
-  $("again").textContent = enviado ? "Novo registo" : "Já enviei — novo registo";
 
   $("done").classList.add("show");
 }
