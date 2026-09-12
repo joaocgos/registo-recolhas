@@ -439,6 +439,10 @@
     font-size: 13px; color: var(--ink-2);
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
   }
+  #assunto-linha { border-top: 1px solid var(--line); }
+  #assunto-linha .loja-end {
+    white-space: normal; overflow: visible; text-overflow: clip;
+  }
   .loja-copiar {
     flex: none; height: 34px; padding: 0 14px;
     background: var(--card); color: var(--red);
@@ -628,8 +632,10 @@
     <!-- Caixas das lojas: no fim, que é quando se vai partilhar (CONFIG.LOJAS) -->
     <section class="card" id="card-lojas" hidden>
       <div class="card-head"><h2>Enviar para</h2></div>
-      <p class="card-hint">Copia a caixa da tua loja e cola-a no «Para» do email.</p>
+      <p class="card-hint">Copia a caixa da tua loja e cola-a no «Para» do
+        email. Se a app não preencher o assunto, copia-o também.</p>
       <div class="lojas" id="lojas"></div>
+      <div class="lojas" id="assunto-linha" hidden></div>
     </section>
 
     </div>
@@ -1629,6 +1635,7 @@ function desenharEquipamentos() {
 }
 
 function desenhar() {
+  actualizarAssunto();
   desenharFolha();
   desenharFatura();
   desenharLocal();
@@ -2127,6 +2134,22 @@ function construirCorpo(num, momento, servico, garantia = null) {
 /* ═══════════════════════════════════════════════════════════════════════════
    Envio
    ═══════════════════════════════════════════════════════════════════════════ */
+// O assunto do email. Fica vazio enquanto faltarem escolhas — serve também
+// para o mostrar no cartão "Enviar para" antes de se partilhar.
+function assuntoDoRegisto() {
+  const mom = MOMENTO_POR_CHAVE[estado.momento];
+  const srv = SERVICO_POR_CHAVE[estado.servico];
+  if (!mom || !srv) return "";
+  const gar = precisaGarantia() ? GARANTIA_POR_CHAVE[estado.garantia] : null;
+  if (precisaGarantia() && !gar) return "";
+  const marcas = [mom.marca, srv.marca];
+  if (gar) marcas.push(gar.marca);
+  const num = $("num").value.trim();
+  const cliente = clientePedido() ? $("cliente").value.trim() : "";
+  const quem = num ? `Serviço ${num}` : cliente ? `Cliente: ${cliente}` : "";
+  return quem ? `[${marcas.join(" · ")}] ${quem}` : "";
+}
+
 async function enviar() {
   if (!validar()) return;
 
@@ -2137,10 +2160,7 @@ async function enviar() {
   // Orçamento não pode viajar para o assunto nem para os ficheiros.
   const garantia = precisaGarantia() ? estado.garantia : null;
   const ficheiros = construirFicheiros(num, momento, servico, garantia);
-  const marcas = [MOMENTO_POR_CHAVE[momento].marca, SERVICO_POR_CHAVE[servico].marca];
-  if (garantia) marcas.push(GARANTIA_POR_CHAVE[garantia].marca);
-  const assunto = `[${marcas.join(" · ")}] ` +
-                  (num ? `Serviço ${num}` : `Cliente: ${$("cliente").value.trim()}`);
+  const assunto = assuntoDoRegisto();
   const corpo = construirCorpo(num, momento, servico, garantia);
 
   const temEtiquetas = estado.equipamentos
@@ -2157,12 +2177,18 @@ async function enviar() {
     }
 
     if (navigator.canShare && navigator.canShare({ files: ficheiros })) {
-      await navigator.share({ files: ficheiros, title: assunto, text: corpo });
+      // O `title` é o assunto, mas muitas apps de email ignoram-no quando vão
+      // ficheiros na partilha. Por isso o assunto vai também na primeira linha
+      // da mensagem: mesmo com o campo vazio, a referência chega à caixa.
+      await navigator.share({
+        files: ficheiros, title: assunto, text: assunto + "\n\n" + corpo,
+      });
       if (num && temEtiquetas) marcarEtiquetaEnviada(num, momento);
       concluir("aviso", "Falta enviar o email",
                "A partilha só entregou as fotografias à app de email. " +
                "Abre-a e carrega em enviar — só aí o registo chega " +
-               destinoDescrito() + ".");
+               destinoDescrito() + ". Se o assunto vier vazio, a referência " +
+               "está na primeira linha da mensagem.");
       return;
     }
 
@@ -2291,15 +2317,47 @@ const LOJAS = CONFIG.LOJAS.map((l) => ({
 const destinoDescrito = () =>
   LOJAS.length ? "à caixa da tua loja" : "a " + EMAIL_DESTINO;
 
-async function copiarEndereco(loja) {
+async function copiarTexto(texto, comoUsar) {
   try {
-    await navigator.clipboard.writeText(loja.endereco);
-    aviso(`Copiado: ${loja.endereco}. Cola-o no «Para» do email.`);
+    await navigator.clipboard.writeText(texto);
+    aviso(`Copiado: ${texto}. ${comoUsar}`);
   } catch (_) {
     // Sem acesso à área de transferência (browser antigo, permissão negada):
     // pelo menos fica escrito, para se copiar à mão.
-    aviso(`Não foi possível copiar. O endereço é ${loja.endereco}.`);
+    aviso(`Não foi possível copiar. Fica aqui para copiares à mão: ${texto}`);
   }
+}
+
+// Linha do cartão "Enviar para": um nome, um valor e o botão de copiar.
+function linhaCopiavel(nome, valor, comoUsar) {
+  const linha = document.createElement("div");
+  linha.className = "loja";
+  const eti = document.createElement("span");
+  eti.className = "loja-nome";
+  eti.textContent = nome;
+  const val = document.createElement("span");
+  val.className = "loja-end";
+  val.textContent = valor;
+  const botao = document.createElement("button");
+  botao.type = "button";
+  botao.className = "loja-copiar";
+  botao.textContent = "copiar";
+  botao.addEventListener("click", () => copiarTexto(valor, comoUsar));
+  linha.append(eti, val, botao);
+  return linha;
+}
+
+// O assunto à vista antes de se partilhar, com botão de copiar: as apps de
+// email que ignoram o assunto da partilha deixam o campo vazio, e assim o
+// técnico pode colá-lo à mão.
+function actualizarAssunto() {
+  const caixa = $("assunto-linha");
+  const assunto = assuntoDoRegisto();
+  caixa.textContent = "";
+  caixa.hidden = !assunto;
+  if (!assunto) return;
+  caixa.appendChild(linhaCopiavel("Assunto", assunto,
+    "Cola-o no assunto do email, se vier vazio."));
 }
 
 function desenharLojas() {
@@ -2327,7 +2385,8 @@ function desenharLojas() {
     botao.type = "button";
     botao.className = "loja-copiar";
     botao.textContent = "copiar";
-    botao.addEventListener("click", () => copiarEndereco(l));
+    botao.addEventListener("click", () =>
+      copiarTexto(l.endereco, "Cola-o no «Para» do email."));
     linha.append(nome, endereco, botao);
     caixa.appendChild(linha);
   });
@@ -2358,6 +2417,7 @@ $("num").addEventListener("input", (e) => {
   if (e.target.value) marcar("num", "num-err", false);
   actualizarCampoNumero();
   actualizarCartaoEtiqueta();
+  actualizarAssunto();
   // Só se redesenha a folha quando o cartão tem de aparecer ou desaparecer —
   // não a cada tecla, senão as miniaturas piscavam. Compara-se com o que está
   // de facto no ecrã: uma variável à parte ficava desatualizada depois de um
@@ -2370,6 +2430,7 @@ $("num").addEventListener("input", (e) => {
 
 $("cliente").addEventListener("input", (e) => {
   if (e.target.value.trim().length >= 2) marcar("cliente", "cliente-err", false);
+  actualizarAssunto();
 });
 
 // Tal como os outros campos: o erro sai assim que o campo fica valido, em vez

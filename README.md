@@ -79,14 +79,33 @@ o Android chega a mostrá-lo diretamente no menu de partilha.
 5. **Partilhar registo** → abre a partilha do telemóvel → escolher o email →
    **carregar em enviar dentro da app de email**.
 
-O assunto sai já preenchido no formato `[RECOLHA] Serviço 26000123`, e o corpo
-leva o técnico, a data e a hora a que cada fotografia foi realmente tirada.
+O corpo leva o técnico, a data e a hora a que cada fotografia foi realmente
+tirada. O assunto vai no formato `[RECOLHA · DOMESTICO · GARANTIA] Serviço
+26000123` — ver *O assunto nem sempre chega*.
+
+### O assunto nem sempre chega
+
+A partilha leva um assunto (`title`), mas **cada app de email decide se o usa**,
+e muitas ignoram-no quando vão ficheiros junto. Não há nada do lado da página
+que o force. Por isso há três redes:
+
+1. **O assunto vai na primeira linha da mensagem.** Mesmo com o campo do
+   assunto vazio, a referência chega à caixa e aparece na pré-visualização da
+   lista de emails.
+2. **Botão para copiar o assunto**, no cartão "Enviar para", ao lado das caixas
+   das lojas. Quem quiser o campo preenchido copia-o antes de partilhar e
+   cola-o na app de email.
+3. **O ecrã final avisa** que, se o assunto vier vazio, a referência está na
+   primeira linha da mensagem.
+
+O nome de cada ficheiro também leva o número do serviço, por isso um registo
+continua identificável mesmo sem assunto nenhum.
 
 ### O botão partilha, não envia
 
 Uma página web não consegue enviar um email sozinha nem saber se ele chegou a
-sair. O que faz é entregar as fotografias à app de email, com o assunto e o
-texto preenchidos — o envio tem mesmo de ser confirmado lá dentro.
+sair. O que faz é entregar as fotografias à app de email, com o texto
+preenchido — o envio tem mesmo de ser confirmado lá dentro.
 
 Por isso o botão diz *Partilhar registo* e o ecrã final diz *Falta enviar o
 email*. Nenhum dos dois promete o que a página não pode garantir.
@@ -377,7 +396,8 @@ para não alongar o nome no caso comum:
     26000123_recolha_hot_gar_eq1_etiqueta_01.jpg
     26000123_recolha_hot_gar_eq2_01.jpg
 
-O assunto vai por extenso, porque é lido por pessoas:
+O assunto — quando a app de email o aceita — vai por extenso, porque é lido
+por pessoas:
 `[OFICINA · DOMESTICO · FORA GARANTIA] Serviço 26000123`. Nos ficheiros, o tipo
 e a garantia entram por códigos curtos — `dom`, `hot`, `ac` e `gar`, `fg` —
 porque é o que mais pesa no comprimento do nome.
