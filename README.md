@@ -80,8 +80,8 @@ o Android chega a mostrá-lo diretamente no menu de partilha.
    **carregar em enviar dentro da app de email**.
 
 O corpo leva o técnico, a data e a hora a que cada fotografia foi realmente
-tirada. O assunto vai no formato `[RECOLHA · DOMESTICO · GARANTIA] Serviço
-26000123` — ver *O assunto nem sempre chega*.
+tirada. O assunto vai no formato `26000123 · RECOLHA · DOMESTICO` — ver
+*O assunto nem sempre chega*.
 
 ### O assunto nem sempre chega
 
@@ -331,7 +331,7 @@ estado de garantia, por isso o seletor nem aparece. Os ficheiros saem sem `eq`,
 sem `etiqueta` e sem garantia: `26000123_orcamento_dom_01.jpg`.
 
 Sem número, o assunto identifica pelo cliente
-(`[RECOLHA · DOMESTICO · GARANTIA] Cliente: Maria Fernandes`) e os ficheiros levam um
+(`Maria Fernandes · RECOLHA · DOMESTICO`) e os ficheiros levam um
 carimbo de data e hora à cabeça (`20260909_2322_recolha_dom_gar_01.jpg`), para
 que dois registos do mesmo tipo no mesmo dia não deem ficheiros com o mesmo
 nome.
@@ -396,11 +396,13 @@ para não alongar o nome no caso comum:
     26000123_recolha_hot_gar_eq1_etiqueta_01.jpg
     26000123_recolha_hot_gar_eq2_01.jpg
 
-O assunto — quando a app de email o aceita — vai por extenso, porque é lido
-por pessoas:
-`[OFICINA · DOMESTICO · FORA GARANTIA] Serviço 26000123`. Nos ficheiros, o tipo
-e a garantia entram por códigos curtos — `dom`, `hot`, `ac` e `gar`, `fg` —
-porque é o que mais pesa no comprimento do nome.
+O assunto — quando a app de email o aceita — leva o número do serviço, o
+momento e o tipo, por esta ordem: `26000123 · OFICINA · DOMESTICO`. O número
+vem à frente porque a lista do email no telemóvel mostra pouco mais de 30
+caracteres, e é por ele que se procura um registo; a garantia fica de fora
+porque vai no corpo, por extenso. Nos ficheiros, o tipo e a garantia entram por
+códigos curtos — `dom`, `hot`, `ac` e `gar`, `fg` — porque é o que mais pesa no
+comprimento do nome.
 
 O padrão é fixo e previsível de propósito: se algum dia se quiser arquivar esta
 caixa de correio automaticamente, o número do serviço e o tipo lêem-se do

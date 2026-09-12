@@ -2136,18 +2136,21 @@ function construirCorpo(num, momento, servico, garantia = null) {
    ═══════════════════════════════════════════════════════════════════════════ */
 // O assunto do email. Fica vazio enquanto faltarem escolhas — serve também
 // para o mostrar no cartão "Enviar para" antes de se partilhar.
+//
+// O número vem à frente de propósito: a lista do email no telemóvel mostra
+// pouco mais de 30 caracteres, e é pelo número que se procura um registo. A
+// garantia não entra — vai no corpo, onde há espaço para a ler por extenso.
 function assuntoDoRegisto() {
   const mom = MOMENTO_POR_CHAVE[estado.momento];
   const srv = SERVICO_POR_CHAVE[estado.servico];
   if (!mom || !srv) return "";
-  const gar = precisaGarantia() ? GARANTIA_POR_CHAVE[estado.garantia] : null;
-  if (precisaGarantia() && !gar) return "";
-  const marcas = [mom.marca, srv.marca];
-  if (gar) marcas.push(gar.marca);
+  // A garantia continua a ser uma escolha por fazer: sem ela, o registo ainda
+  // não está classificado, mesmo que não apareça no assunto.
+  if (precisaGarantia() && !GARANTIA_POR_CHAVE[estado.garantia]) return "";
   const num = $("num").value.trim();
   const cliente = clientePedido() ? $("cliente").value.trim() : "";
-  const quem = num ? `Serviço ${num}` : cliente ? `Cliente: ${cliente}` : "";
-  return quem ? `[${marcas.join(" · ")}] ${quem}` : "";
+  const quem = num || cliente;
+  return quem ? `${quem} · ${mom.marca} · ${srv.marca}` : "";
 }
 
 async function enviar() {
