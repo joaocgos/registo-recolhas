@@ -83,23 +83,17 @@ O corpo leva o técnico, a data e a hora a que cada fotografia foi realmente
 tirada. O assunto vai no formato `26000123 · RECOLHA · DOMESTICO` — ver
 *O assunto nem sempre chega*.
 
-### O assunto nem sempre chega
+### O assunto depende da app de email
 
-A partilha leva um assunto (`title`), mas **cada app de email decide se o usa**,
-e muitas ignoram-no quando vão ficheiros junto. Não há nada do lado da página
-que o force. Por isso há três redes:
+A partilha leva um assunto (`title`), mas **cada app decide se o usa** — não há
+nada do lado da página que o force. O Gmail no Android, que é o que os técnicos
+usam, preenche-o; noutras apps pode chegar vazio.
 
-1. **O assunto vai na primeira linha da mensagem.** Mesmo com o campo do
-   assunto vazio, a referência chega à caixa e aparece na pré-visualização da
-   lista de emails.
-2. **Botão para copiar o assunto**, no cartão "Enviar para", ao lado das caixas
-   das lojas. Quem quiser o campo preenchido copia-o antes de partilhar e
-   cola-o na app de email.
-3. **O ecrã final avisa** que, se o assunto vier vazio, a referência está na
-   primeira linha da mensagem.
-
-O nome de cada ficheiro também leva o número do serviço, por isso um registo
-continua identificável mesmo sem assunto nenhum.
+Para esse caso, o cartão "Enviar para" mostra o assunto com um **botão de
+copiar**, ao lado das caixas das lojas: copia-se antes de partilhar e cola-se
+na app de email. E mesmo sem assunto nenhum, o registo continua identificável —
+o corpo começa pelo serviço e pelo momento, e o número do serviço vai no nome
+de cada ficheiro.
 
 ### O botão partilha, não envia
 
@@ -113,7 +107,10 @@ email*. Nenhum dos dois promete o que a página não pode garantir.
 Se a partilha correr mal — a app de email fechou, o rascunho perdeu-se,
 escolheu-se a app errada — o ecrã final tem **Partilhar outra vez**, que repete
 tudo com as mesmas fotografias. Estas só desaparecem quando se toca em
-*Novo registo*.
+*Novo registo*, que recomeça tudo: as fotografias, os campos e a classificação
+(tipo, momento e garantia). Só o nome de quem regista e o número de
+equipamentos é que se mantêm — são os dois que se repetem de registo para
+registo.
 
 ### Folha de serviço
 

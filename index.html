@@ -2180,18 +2180,16 @@ async function enviar() {
     }
 
     if (navigator.canShare && navigator.canShare({ files: ficheiros })) {
-      // O `title` é o assunto, mas muitas apps de email ignoram-no quando vão
-      // ficheiros na partilha. Por isso o assunto vai também na primeira linha
-      // da mensagem: mesmo com o campo vazio, a referência chega à caixa.
-      await navigator.share({
-        files: ficheiros, title: assunto, text: assunto + "\n\n" + corpo,
-      });
+      // O `title` é o assunto. Nem todas as apps de email o usam, mas o Gmail
+      // no Android — que é o que os técnicos usam — preenche-o. Para quando
+      // falhar, o corpo identifica o registo nas primeiras linhas e o cartão
+      // "Enviar para" mostra o assunto com botão de copiar.
+      await navigator.share({ files: ficheiros, title: assunto, text: corpo });
       if (num && temEtiquetas) marcarEtiquetaEnviada(num, momento);
       concluir("aviso", "Falta enviar o email",
                "A partilha só entregou as fotografias à app de email. " +
                "Abre-a e carrega em enviar — só aí o registo chega " +
-               destinoDescrito() + ". Se o assunto vier vazio, a referência " +
-               "está na primeira linha da mensagem.");
+               destinoDescrito() + ".");
       return;
     }
 
@@ -2290,17 +2288,23 @@ function recomeçar() {
   // Nenhum campo fica vermelho de um registo para o seguinte.
   ["num", "cliente", "morada", "tec", "pretendido"]
     .forEach((id) => $(id).classList.remove("invalid"));
+  // Um registo novo é classificado do zero. Herdar o tipo, o momento e a
+  // garantia do anterior passava despercebido, e um registo podia ir parar ao
+  // momento errado sem ninguém reparar.
+  estado.momento = null;
+  estado.servico = null;
+  estado.garantia = null;
+  document.querySelectorAll(".seg")
+    .forEach((b) => b.setAttribute("aria-pressed", "false"));
   actualizarCampoNumero();
   $("done").classList.remove("show");
   concluidoOk = false;
   editando = null;
   actualizarVisibilidade();
   desenhar();
+  // Já não se foca o número: com a classificação por fazer, o formulário está
+  // escondido, e o que o técnico tem à frente é a escolha do tipo de serviço.
   subirAoTopo();
-  // Sem preventScroll, o foco fazia o browser deslizar ate ao campo antes de a
-  // subida ao topo acontecer, e a pagina ficava a meio. No topo o campo ja
-  // esta a vista.
-  $("num").focus({ preventScroll: true });
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
