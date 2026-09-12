@@ -2269,9 +2269,9 @@ function recomeçar() {
   todosItens().forEach((f) => {
     if (f && f.url) URL.revokeObjectURL(f.url);
   });
-  // Mantém-se o número de equipamentos: quem faz cinco máquinas seguidas num
-  // hotel não quer voltar a contá-las a cada registo.
-  estado.equipamentos = estado.equipamentos.map(() => novoEquipamento());
+  // Tudo volta ao princípio, incluindo o número de equipamentos: um registo
+  // novo não herda nada do anterior. Só o nome de quem regista é que fica.
+  estado.equipamentos = [novoEquipamento()];
   estado.folha = [];
   estado.fatura = [];
   estado.local = [];

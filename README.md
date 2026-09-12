@@ -107,10 +107,9 @@ email*. Nenhum dos dois promete o que a página não pode garantir.
 Se a partilha correr mal — a app de email fechou, o rascunho perdeu-se,
 escolheu-se a app errada — o ecrã final tem **Partilhar outra vez**, que repete
 tudo com as mesmas fotografias. Estas só desaparecem quando se toca em
-*Novo registo*, que recomeça tudo: as fotografias, os campos e a classificação
-(tipo, momento e garantia). Só o nome de quem regista e o número de
-equipamentos é que se mantêm — são os dois que se repetem de registo para
-registo.
+*Novo registo*, que recomeça tudo: as fotografias, os campos, o número de
+equipamentos e a classificação (tipo, momento e garantia). Só o nome de quem
+regista é que se mantém.
 
 ### Folha de serviço
 
